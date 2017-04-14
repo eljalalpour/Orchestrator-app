@@ -24,7 +24,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.lang.reflect.Array;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -38,6 +37,7 @@ public class OrchestratorApp {
     private HostService hostService;
 
     private Iterable<Host> availableHosts;
+    private String[] chainElems;
     private DeviceListener deviceListener = new InnerDeviceListener();
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -45,7 +45,7 @@ public class OrchestratorApp {
     private static final String DELIM = ",";
     private String chain = "src_ip" + DELIM + "chain" + DELIM + "dst_ip";
 
-    private static final int REPLICA_PORT = 2222;
+    private static final int AGENT_PORT = 2222;
 
     private String[] parseChain(String chain) {
         return chain.split(DELIM);
@@ -53,24 +53,33 @@ public class OrchestratorApp {
 
     /**
      * The orchestrator sends a MB_INIT message to the replica. The format of message is as follows
-     * Command Middlebox IPsLength IP1  IP2  ...
-     * 1       2         3         IPsLength * 4
+     * Command Middlebox ChainLength IP1-MB1  IP2-MB2  ...
+     * 1       2         3           ChainLength * 5
      * @param command either initialize Commands.MB_INIT or Commands.MB_INIT_AND_FETCH_STATE
      * @param middleBox the middlebox that the agent should initialize inside the click-instance
      * @param host the host in which the click-instance must be initialized
      * @throws IOException
      */
     private void init(byte command, byte middleBox, Host host) throws IOException {
-        byte ipsSize = (byte) (Integer.SIZE / Byte.SIZE * replicaMapping.size());
-        ByteBuffer buffer = ByteBuffer.allocate(ipsSize + 3);
+        byte ipsSize = (byte) ((Integer.SIZE / Byte.SIZE + 1) * replicaMapping.size());
+
+        ByteBuffer buffer = (command == Commands.MB_INIT_AND_FETCH_STATE) ?
+                ByteBuffer.allocate(ipsSize + 3) :
+                ByteBuffer.allocate(2);
+
         buffer.put(command);
         buffer.put(middleBox);
-        buffer.put(ipsSize);
-        for(Host h : replicaMapping) {
-            buffer.put(h.ipAddresses().iterator().next().getIp4Address().toOctets());
-        }//for
 
-        Socket replicaSocket = new Socket(host.ipAddresses().iterator().next().toInetAddress(), REPLICA_PORT);
+        // If the command include fetch state, then the orchestrator has to provide the IP addresses of the other agents
+        if (command == Commands.MB_INIT_AND_FETCH_STATE) {
+            buffer.put(ipsSize);
+            for (int i = 0; i < replicaMapping.size(); ++i){
+                buffer.put(replicaMapping.get(i).ipAddresses().iterator().next().getIp4Address().toOctets());
+                buffer.put(Byte.parseByte(chainElems[i + 1]));
+            }//for
+        }//if
+
+        Socket replicaSocket = new Socket(host.ipAddresses().iterator().next().toInetAddress(), AGENT_PORT);
         OutputStream out = replicaSocket.getOutputStream();
         out.write(buffer.array());
         out.close();
@@ -78,7 +87,7 @@ public class OrchestratorApp {
 
     /**
      * Place click-instances of a chain
-     * @param MBs of the chain
+     * @param chainElems of the chain
      * @return
      */
     private void placeChain(String[] chainElems) throws IOException {
@@ -98,8 +107,12 @@ public class OrchestratorApp {
         //TODO
     }
 
+    private void reroute(String[] chainElems) {
+
+    }
+
     private void deployChain(String chain) {
-        String[] chainElems = parseChain(chain);
+        chainElems = parseChain(chain);
         try {
             placeChain(chainElems);
             route(chainElems);
@@ -107,6 +120,10 @@ public class OrchestratorApp {
         catch (IOException exception) {
 
         }//catch
+    }
+
+    private void recover(DeviceEvent deviceEvent) {
+        // TODO: find the failed host if any, and remove it from replica mapping, replace with new host
     }
 
     @Activate
@@ -139,6 +156,7 @@ public class OrchestratorApp {
 
                 case PORT_REMOVED:
                     log.info("PORT {} is removed at time {}",event.port(), event.time());
+                    recover(event);
                     break;
 
                 default:
