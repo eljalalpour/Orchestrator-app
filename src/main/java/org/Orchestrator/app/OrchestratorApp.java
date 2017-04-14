@@ -24,10 +24,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.lang.reflect.Array;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Dictionary;
 
 @Component(immediate = true)
 public class OrchestratorApp {
@@ -37,8 +37,7 @@ public class OrchestratorApp {
     @Reference(cardinality = ReferenceCardinality.MANDATORY_UNARY)
     private HostService hostService;
 
-    private Iterable<Host> hosts;
-
+    private Iterable<Host> availableHosts;
     private DeviceListener deviceListener = new InnerDeviceListener();
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -50,10 +49,6 @@ public class OrchestratorApp {
 
     private String[] parseChain(String chain) {
         return chain.split(DELIM);
-    }
-
-    private void collectHostInformation() {
-         hosts = hostService.getHosts();
     }
 
     /**
@@ -81,17 +76,43 @@ public class OrchestratorApp {
         out.close();
     }
 
-    private boolean placeReplicas() {
+    /**
+     * Place click-instances of a chain
+     * @param MBs of the chain
+     * @return
+     */
+    private void placeChain(String[] chainElems) throws IOException {
         boolean result = true;
+        //TODO: check if we have enough hosts that we can install replicas on them
 
-        return result;
+        for (int i = 1; i < chainElems.length - 1; ++i) {
+            byte MB = Byte.parseByte(chainElems[i]);
+            Host host = availableHosts.iterator().next();
+            init(Commands.MB_INIT, MB, host);
+            replicaMapping.add(host);
+            availableHosts.iterator().remove();
+        }//for
     }
 
+    private void route(String[] chainElems){
+        //TODO
+    }
+
+    private void deployChain(String chain) {
+        String[] chainElems = parseChain(chain);
+        try {
+            placeChain(chainElems);
+            route(chainElems);
+        }
+        catch (IOException exception) {
+
+        }//catch
+    }
 
     @Activate
     protected void activate()
     {
-        collectHostInformation();
+        availableHosts = hostService.getHosts();
 
         // Listen for failures
         deviceService.addListener(deviceListener);
@@ -114,7 +135,6 @@ public class OrchestratorApp {
             switch (event.type()) {
                 case PORT_ADDED:
                     log.info("PORT {} is added at time {} ", event.port(), event.time());
-                    collectHostInformation();
                     break;
 
                 case PORT_REMOVED:
