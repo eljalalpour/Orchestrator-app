@@ -7,11 +7,13 @@ import org.onlab.packet.Ip4Address;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 
 public class Agent {
     public static final int AGENT_PORT = 2222;
+    public static final int CLICK_INS_PORT = 33333;
     private static Socket clientSocket = null;
     //TODO: Implement initializing ipAddr
     private static Ip4Address ipAddr = null;
@@ -24,8 +26,17 @@ public class Agent {
     public static final int MB_LEN = 1;
     public static final int REPLICA_LEN = IP_LEN + MB_LEN;
 
+    private static boolean allSet(boolean[] arr) {
+        boolean result = true;
+        for (int i = 0; i < arr.length && result; ++i) result = arr[i];
+
+        return result;
+    }
+
     public static void handleInit(boolean fetchState, byte[] bytes) {
         byte middlebox = bytes[MB_OFFSET];
+
+        // Fetch the state
         if (fetchState) {
             // Parse the rest of the command
             byte ipsLen = bytes[CHAIN_LENGTH_OFFSET];
@@ -44,18 +55,59 @@ public class Agent {
                 }//if
             }//for
 
-            // Ask for the primary states
+            //TODO: There is a bug below, we need only f+1 threads, not n (chain length) thread
+            int[] whoToAsk = new int[types.length];
+            for (int i = 0; i < whoToAsk.length; ++i) whoToAsk[i] = i;
+            whoToAsk[chainPos] = (chainPos + 1) % types.length;
 
+            byte[][] states = new byte[types.length][];
+            boolean[] successes = new boolean[types.length];
 
-            // Ask for the secondary states
+            FetchStateThread[] threads = new FetchStateThread[types.length];
 
+            do {
+                // Run a thread for the required states
+                for (int i = 0; i < whoToAsk.length; ++i) {
+                    if (successes[i]) continue;
+
+                    threads[i] = new FetchStateThread(ipAddrs[whoToAsk[i]], AGENT_PORT, types[i]);
+                    threads[i].start();
+                }//for
+
+                // Wait for the threads to finish their job
+                for (int i = 0; i < whoToAsk.length; ++i) {
+                    if (successes[i]) continue;
+                    try {
+                        threads[i].join();
+                    }//try
+                    catch(InterruptedException iExc) {
+                        iExc.printStackTrace();
+                    }//catch
+                }//for
+
+                // Check for the result of the threads
+                for (int i = 0; i < whoToAsk.length; ++i) {
+                    if (successes[i]) continue;
+
+                    successes[i] = threads[i].getSuccess();
+                    if (successes[i])
+                        states[i] = threads[i].getMBState();
+                }//for
+            }//do
+            while(allSet(successes));//while
         }//if
 
         // TODO: initialize the click-instance
     }
 
-    public static void handleGetState() {
+    public static byte[] handleGetState(byte[] bytes) {
+        //TODO: Handle the case if some exception happens
+        FetchStateThread thread = new FetchStateThread(ipAddr, CLICK_INS_PORT, bytes[MB_OFFSET]);
+        thread.fetchState();
 
+        if (thread.getSuccess())
+            return thread.getMBState();
+        return null;
     }
 
     public static void rollback() {
@@ -105,7 +157,9 @@ public class Agent {
                             break;
 
                         case Commands.GET_STATE:
-                            handleGetState();
+                            byte[] states = handleGetState(bytes);
+                            OutputStream out = clientSocket.getOutputStream();
+                            out.write(states);
                             break;
 
                         default:
