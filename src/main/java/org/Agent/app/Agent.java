@@ -4,27 +4,23 @@ import org.Orchestrator.app.Commands;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.cli.*;
 import org.onlab.packet.Ip4Address;
+import org.onosproject.net.Host;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 
 public class Agent {
-    public static final int AGENT_PORT = 2222;
+    public static final int DEFAULT_AGENT_PORT = 2222;
     public static final int CLICK_INS_PORT = 33333;
     private static Socket clientSocket = null;
-    //TODO: Implement initializing ipAddr
-    private static Ip4Address ipAddr = null;
+    private Ip4Address ipAddr = null;
 
     public static final int CMD_OFFSET = 0;
     public static final int MB_OFFSET = 1;
-    public static final int CHAIN_LENGTH_OFFSET = 2;
-    public static final int FIRST_IP_OFFSET = 3;
-    public static final int IP_LEN = 4;
-    public static final int MB_LEN = 1;
-    public static final int REPLICA_LEN = IP_LEN + MB_LEN;
+
+    private static final String RUN_CLICK_INSTANCE = "click %s.click";
 
     private static boolean allSet(boolean[] arr) {
         boolean result = true;
@@ -33,44 +29,37 @@ public class Agent {
         return result;
     }
 
-    public static void handleInit(boolean fetchState, byte[] bytes) {
-        byte middlebox = bytes[MB_OFFSET];
-
+    public void handleInit(boolean fetchState, byte[] bytes) {
         // Fetch the state
         if (fetchState) {
-            // Parse the rest of the command
-            byte ipsLen = bytes[CHAIN_LENGTH_OFFSET];
-            Ip4Address[] ipAddrs = new Ip4Address[ipsLen];
-            byte[] types = new byte[ipsLen];
-            byte chainPos = -1;
-
             // Find the position of this replica in the chain
-            for (byte i = 0; i < ipsLen; ++i) {
-                //TODO: Make sure that Ip4Address.valueOf function works as expected
-                ipAddrs[i] = Ip4Address.valueOf(bytes, i * REPLICA_LEN + FIRST_IP_OFFSET);
-                types[i] = bytes[i * REPLICA_LEN + FIRST_IP_OFFSET + IP_LEN];
-
-                if (ipAddrs[i] == ipAddr) {
+            ArrayList<Ip4Address> ipAddrs = new ArrayList<>();
+            ArrayList<Byte> types = new ArrayList<>();
+            Commands.parseInitResponse(bytes, ipAddrs, types);
+            byte chainPos = -1;
+            for (byte i = 0; i < ipAddrs.size(); ++i) {
+                if (ipAddrs.get(i).equals(ipAddr)) {
                     chainPos = i;
+                    break;
                 }//if
             }//for
 
             //TODO: There is a bug below, we need only f+1 threads, not n (chain length) thread
-            int[] whoToAsk = new int[types.length];
+            int[] whoToAsk = new int[types.size()];
             for (int i = 0; i < whoToAsk.length; ++i) whoToAsk[i] = i;
-            whoToAsk[chainPos] = (chainPos + 1) % types.length;
+            whoToAsk[chainPos] = (chainPos + 1) % types.size();
 
-            byte[][] states = new byte[types.length][];
-            boolean[] successes = new boolean[types.length];
+            byte[][] states = new byte[types.size()][];
+            boolean[] successes = new boolean[types.size()];
 
-            FetchStateThread[] threads = new FetchStateThread[types.length];
+            FetchStateThread[] threads = new FetchStateThread[types.size()];
 
             do {
                 // Run a thread for the required states
                 for (int i = 0; i < whoToAsk.length; ++i) {
                     if (successes[i]) continue;
 
-                    threads[i] = new FetchStateThread(ipAddrs[whoToAsk[i]], AGENT_PORT, types[i]);
+                    threads[i] = new FetchStateThread(ipAddrs.get(whoToAsk[i]), DEFAULT_AGENT_PORT, types.get(i));
                     threads[i].start();
                 }//for
 
@@ -97,10 +86,17 @@ public class Agent {
             while(allSet(successes));//while
         }//if
 
-        // TODO: initialize the click-instance
+        try {
+            String middlebox = Byte.toString(bytes[MB_OFFSET]);
+            System.out.println(String.format(RUN_CLICK_INSTANCE, middlebox));
+            Process p = Runtime.getRuntime().exec(String.format(RUN_CLICK_INSTANCE, middlebox));
+        }//try
+        catch (IOException ioExc) {
+            ioExc.printStackTrace();
+        }//catch
     }
 
-    public static byte[] handleGetState(byte[] bytes) {
+    public byte[] handleGetState(byte[] bytes) {
         //TODO: Handle the case if some exception happens
         FetchStateThread thread = new FetchStateThread(ipAddr, CLICK_INS_PORT, bytes[MB_OFFSET]);
         thread.fetchState();
@@ -110,23 +106,16 @@ public class Agent {
         return null;
     }
 
-    public static void rollback() {
-
-    }
-
-    public static void Main (String args[]) {
+    public static void main (String args[]) {
+        Agent agent = new Agent();
         CommandLineParser parser = new DefaultParser();
         Options options = new Options();
         options.addOption( "i", "ip", true, "The ip address of the host that " +
                 "this agent is running on" );
-
         try {
             // parse the command line arguments
             CommandLine line = parser.parse(options, args);
-
-            // validate that block-size has been set
-            // print the value of block-size
-            Agent.ipAddr = Ip4Address.valueOf(line.getOptionValue("ip"));
+            agent.ipAddr = Ip4Address.valueOf(line.getOptionValue("ip"));
         }//try
         catch( ParseException exp ) {
             System.out.println( "Unexpected exception:" + exp.getMessage() );
@@ -135,7 +124,7 @@ public class Agent {
 
         ServerSocket serverSocket;
         try {
-            serverSocket = new ServerSocket(AGENT_PORT);
+            serverSocket = new ServerSocket(DEFAULT_AGENT_PORT, 0, agent.ipAddr.toInetAddress());
         } catch (IOException e) {
             System.out.println(e);
             return;
@@ -149,15 +138,15 @@ public class Agent {
                 if (bytes.length > 0) {
                     switch (bytes[CMD_OFFSET]) {
                         case Commands.MB_INIT:
-                            handleInit(false, bytes);
+                            agent.handleInit(false, bytes);
                             break;
 
                         case Commands.MB_INIT_AND_FETCH_STATE:
-                            handleInit(true, bytes);
+                            agent.handleInit(true, bytes);
                             break;
 
                         case Commands.GET_STATE:
-                            byte[] states = handleGetState(bytes);
+                            byte[] states = agent.handleGetState(bytes);
                             OutputStream out = clientSocket.getOutputStream();
                             out.write(states);
                             break;

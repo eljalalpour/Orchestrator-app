@@ -38,14 +38,13 @@ public class FetchStateThread extends Thread {
             socket.setSoTimeout(SO_TIMEOUT);
             OutputStream out = socket.getOutputStream();
             out.write(Commands.getStateCommand(MBType));
+            out.close();
 
             InputStream in = socket.getInputStream();
             int size = in.read();
             MBState = new byte[size];
             in.read(MBState);
-
             in.close();
-            out.close();
 
             success = true;
         }//try

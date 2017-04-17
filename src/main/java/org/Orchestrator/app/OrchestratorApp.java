@@ -15,6 +15,7 @@
  */
 package org.Orchestrator.app;
 import org.apache.felix.scr.annotations.*;
+
 import org.onosproject.net.Host;
 import org.onosproject.net.device.DeviceListener;
 import org.onosproject.net.device.DeviceService;
@@ -24,8 +25,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.net.InetAddress;
 import java.net.Socket;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
 @Component(immediate = true)
@@ -51,37 +52,22 @@ public class OrchestratorApp {
         return chain.split(DELIM);
     }
 
+    public void setChain(String chain) {
+        this.chain = chain;
+        this.chainElems = parseChain(this.chain);
+    }
+
     /**
-     * The orchestrator sends a MB_INIT message to the replica. The format of message is as follows
-     * Command Middlebox ChainLength IP1-MB1  IP2-MB2  ...
-     * 1       2         3           ChainLength * 5
+     * The orchestrator sends a MB_INIT message to the replica.
      * @param command either initialize Commands.MB_INIT or Commands.MB_INIT_AND_FETCH_STATE
      * @param middleBox the middlebox that the agent should initialize inside the click-instance
-     * @param host the host in which the click-instance must be initialized
+     * @param ipAddr the IP of the host in which the click-instance must be initialized
      * @throws IOException
      */
-    private void init(byte command, byte middleBox, Host host) throws IOException {
-        byte ipsSize = (byte) ((Integer.SIZE / Byte.SIZE + 1) * replicaMapping.size());
-
-        ByteBuffer buffer = (command == Commands.MB_INIT_AND_FETCH_STATE) ?
-                ByteBuffer.allocate(ipsSize + 3) :
-                ByteBuffer.allocate(2);
-
-        buffer.put(command);
-        buffer.put(middleBox);
-
-        // If the command include fetch state, then the orchestrator has to provide the IP addresses of the other agents
-        if (command == Commands.MB_INIT_AND_FETCH_STATE) {
-            buffer.put(ipsSize);
-            for (int i = 0; i < replicaMapping.size(); ++i){
-                buffer.put(replicaMapping.get(i).ipAddresses().iterator().next().getIp4Address().toOctets());
-                buffer.put(Byte.parseByte(chainElems[i + 1]));
-            }//for
-        }//if
-
-        Socket replicaSocket = new Socket(host.ipAddresses().iterator().next().toInetAddress(), AGENT_PORT);
+    private void init(byte command, byte middleBox, InetAddress ipAddr) throws IOException {
+        Socket replicaSocket = new Socket(ipAddr, AGENT_PORT);
         OutputStream out = replicaSocket.getOutputStream();
-        out.write(buffer.array());
+        out.write(Commands.getInitCommand(command, middleBox, replicaMapping, chainElems));
         out.close();
     }
 
@@ -97,7 +83,7 @@ public class OrchestratorApp {
         for (int i = 1; i < chainElems.length - 1; ++i) {
             byte MB = Byte.parseByte(chainElems[i]);
             Host host = availableHosts.iterator().next();
-            init(Commands.MB_INIT, MB, host);
+            init(Commands.MB_INIT, MB, host.ipAddresses().iterator().next().toInetAddress());
             replicaMapping.add(host);
             availableHosts.iterator().remove();
         }//for
@@ -165,4 +151,14 @@ public class OrchestratorApp {
         }
     }
 
+    public static void main(String[] args) {
+        OrchestratorApp orch = new OrchestratorApp();
+        orch.setChain("127.0.0.1,0,1,127.0.0.1");
+        try {
+            orch.init(Commands.MB_INIT_AND_FETCH_STATE, (byte) 0, InetAddress.getByName("localhost"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
 }
