@@ -1,6 +1,7 @@
 package org.Agent.app;
 
 import org.Orchestrator.app.Commands;
+import org.Orchestrator.app.FaultTolerantChain;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.cli.*;
 import org.onlab.packet.Ip4Address;
@@ -29,14 +30,17 @@ public class Agent {
         return result;
     }
 
+    private static int whoToAsk(byte f, byte n, byte i, byte chainPos) {
+        return (chainPos - f + i + n) % n;
+    }
+
     public void handleInit(boolean fetchState, byte[] bytes) {
         // Fetch the state
         if (fetchState) {
             // Find the position of this replica in the chain
-            ArrayList<Ip4Address> ipAddrs = new ArrayList<>();
-            ArrayList<Byte> types = new ArrayList<>();
-            Commands.parseInitResponse(bytes, ipAddrs, types);
+            FaultTolerantChain chain = Commands.parseInitResponse(bytes);
             byte chainPos = -1;
+            ArrayList<Ip4Address> ipAddrs = chain.getReplicaMapping();
             for (byte i = 0; i < ipAddrs.size(); ++i) {
                 if (ipAddrs.get(i).equals(ipAddr)) {
                     chainPos = i;
@@ -44,22 +48,23 @@ public class Agent {
                 }//if
             }//for
 
-            //TODO: There is a bug below, we need only f+1 threads, not n (chain length) thread
-            int[] whoToAsk = new int[types.size()];
-            for (int i = 0; i < whoToAsk.length; ++i) whoToAsk[i] = i;
-            whoToAsk[chainPos] = (chainPos + 1) % types.size();
+            byte f = chain.getF();
+            byte n = (byte)chain.length();
+            int[] whoToAsk = new int[f + 1];
+            for (byte i = 0; i < whoToAsk.length; ++i) whoToAsk[i] = whoToAsk(f, n, i, chainPos);
+            whoToAsk[chainPos] = (chainPos + 1) % n;
 
-            byte[][] states = new byte[types.size()][];
-            boolean[] successes = new boolean[types.size()];
-
-            FetchStateThread[] threads = new FetchStateThread[types.size()];
+            byte[][] states = new byte[f + 1][];
+            boolean[] successes = new boolean[f + 1];
+            FetchStateThread[] threads = new FetchStateThread[f + 1];
 
             do {
                 // Run a thread for the required states
-                for (int i = 0; i < whoToAsk.length; ++i) {
+                for (byte i = 0; i < whoToAsk.length; ++i) {
                     if (successes[i]) continue;
 
-                    threads[i] = new FetchStateThread(ipAddrs.get(whoToAsk[i]), DEFAULT_AGENT_PORT, types.get(i));
+                    threads[i] = new FetchStateThread(ipAddrs.get(whoToAsk[i]),
+                            DEFAULT_AGENT_PORT, chain.getMB(whoToAsk(f, n, i, chainPos)));
                     threads[i].start();
                 }//for
 
@@ -86,6 +91,7 @@ public class Agent {
             while(allSet(successes));//while
         }//if
 
+        // Run the click instance
         try {
             String middlebox = Byte.toString(bytes[MB_OFFSET]);
             System.out.println(String.format(RUN_CLICK_INSTANCE, middlebox));

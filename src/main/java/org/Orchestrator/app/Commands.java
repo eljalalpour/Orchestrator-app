@@ -1,10 +1,7 @@
 package org.Orchestrator.app;
 
 import org.onlab.packet.Ip4Address;
-import org.onosproject.net.Host;
-
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
 
 /**
  * Created by ejalalpo on 4/13/17.
@@ -12,15 +9,14 @@ import java.util.ArrayList;
 public class Commands {
     public static final int CMD_OFFSET = 0;
     public static final int MB_OFFSET = 1;
-    public static final int CHAIN_LENGTH_OFFSET = 2;
-    public static final int FIRST_IP_OFFSET = 3;
+    public static final int F_OFFSET = 2;
+    public static final int CHAIN_LENGTH_OFFSET = 3;
+    public static final int FIRST_IP_OFFSET = 4;
     public static final int IP_LEN = 4;
     public static final int MB_LEN = 1;
     public static final int REPLICA_LEN = IP_LEN + MB_LEN;
 
     public static final int GET_STATE_CMD_LEN = 2;
-
-
 
     // Used to initialize the click-instance.
     // This command is used during the initial deployment.
@@ -43,51 +39,56 @@ public class Commands {
 
     /**
      * The format of message is as follows
-     * Command Middlebox ChainLength IP1-MB1  IP2-MB2  ...
-     * 1       2         3           ChainLength * 5
+     * Command Middlebox F ChainLength IP1-MB1  IP2-MB2  ...
+     * 0       1         2 3           4        9        4 + ChainLength * 5
      * @param command either initialize Commands.MB_INIT or Commands.MB_INIT_AND_FETCH_STATE
      * @param middleBox the middlebox that the agent should initialize inside the click-instance
-     * @param replicaMapping the mapping of replicas to hosts
-     * @param chainElems the elements of the chain
-     * @return
+     * @param chain the chain
+     * @return the byte string of the command
      */
-    public static byte[] getInitCommand(byte command, byte middleBox, ArrayList<Host> replicaMapping, String[] chainElems) {
-        byte ipsSize = (byte) ((Integer.SIZE / Byte.SIZE + 1) * 2);
-//        byte ipsSize = (byte) ((Integer.SIZE / Byte.SIZE + 1) * replicaMapping.size());
-
+    public static byte[] getInitCommand(byte command, byte middleBox, FaultTolerantChain chain) {
+        byte ipsSize = (byte) ((Integer.SIZE / Byte.SIZE + 1) * chain.length());
         ByteBuffer buffer = (command == Commands.MB_INIT_AND_FETCH_STATE) ?
-                ByteBuffer.allocate(ipsSize + 3) :
-                ByteBuffer.allocate(2);
+                ByteBuffer.allocate(ipsSize + 4) :
+                ByteBuffer.allocate(3);
 
         buffer.put(command);
         buffer.put(middleBox);
+        buffer.put(chain.getF());
 
         // If the command include fetch state, then the orchestrator has to provide the IP addresses of the other agents
         if (command == Commands.MB_INIT_AND_FETCH_STATE) {
-//            buffer.put(replicaMapping.size());
-//            for (int i = 0; i < replicaMapping.size(); ++i){
-//                buffer.put(replicaMapping.get(i).ipAddresses().iterator().next().getIp4Address().toOctets());
-//                buffer.put(Byte.parseByte(chainElems[i + 1]));
-//            }//for
+            buffer.put((byte)chain.length());
 
-            buffer.put((byte)2);
+            for (int i = 0; i < chain.replicaMapping.size(); ++i){
+                buffer.put(chain.replicaMapping.get(i).toOctets());
+                buffer.put(chain.getMB(i));
+            }//for
+
             buffer.put(Ip4Address.valueOf("127.0.0.1").toOctets());
-            buffer.put(Byte.parseByte(chainElems[1]));
+            buffer.put(chain.getMB(0));
             buffer.put(Ip4Address.valueOf("10.20.159.142").toOctets());
-            buffer.put(Byte.parseByte(chainElems[2]));
+            buffer.put(chain.getMB(1));
         }//if
         return buffer.array();
     }
 
-    public static void parseInitResponse (byte[] bytes, ArrayList<Ip4Address> ipAddrs, ArrayList<Byte> types) {
+    public static FaultTolerantChain parseInitResponse(byte[] bytes) {
         // Parse the rest of the command
         byte ipsLen = bytes[CHAIN_LENGTH_OFFSET];
         // Find the position of this replica in the chain
 
+        FaultTolerantChain chain = new FaultTolerantChain();
+        chain.setF(bytes[F_OFFSET]);
+
         for (byte i = 0; i < ipsLen; ++i) {
             //TODO: Make sure that Ip4Address.valueOf function works as expected
-            ipAddrs.add(Ip4Address.valueOf(bytes, i * REPLICA_LEN + FIRST_IP_OFFSET));
-            types.add(bytes[i * REPLICA_LEN + FIRST_IP_OFFSET + IP_LEN]);
+//            ipAddrs.add(Ip4Address.valueOf(bytes, i * REPLICA_LEN + FIRST_IP_OFFSET));
+//            types.add(bytes[i * REPLICA_LEN + FIRST_IP_OFFSET + IP_LEN]);
+            chain.appendToChain(bytes[i * REPLICA_LEN + FIRST_IP_OFFSET + IP_LEN]);
+            chain.replicaMapping.add(Ip4Address.valueOf(bytes, i * REPLICA_LEN + FIRST_IP_OFFSET));
         }//for
+
+        return chain;
     }
 }
