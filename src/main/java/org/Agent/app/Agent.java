@@ -17,11 +17,12 @@ public class Agent {
     public static final int CMD_OFFSET = 0;
     public static final int MB_OFFSET = 1;
 
-    private static final String RUN_CLICK_INSTANCE = "click %s.click";
+    private static final String RUN_CLICK_INSTANCE = "click-%s.click";
 
     private static boolean allSet(boolean[] arr) {
         boolean result = true;
-        for (int i = 0; i < arr.length && result; ++i) result = arr[i];
+        for (int i = 0; i < arr.length && result; ++i)
+            result = arr[i];
 
         return result;
     }
@@ -34,7 +35,7 @@ public class Agent {
         // Fetch the state
         if (fetchState) {
             // Find the position of this replica in the chain
-            FaultTolerantChain chain = Commands.parseInitResponse(bytes);
+            FaultTolerantChain chain = Commands.parseChainFromInitCommand(bytes);
             byte chainPos = -1;
             ArrayList<Ip4Address> ipAddrs = chain.getReplicaMapping();
             for (byte i = 0; i < ipAddrs.size(); ++i) {
@@ -89,7 +90,9 @@ public class Agent {
 
         // Run the click instance
         try {
-            String middlebox = Byte.toString(bytes[MB_OFFSET]);
+            byte chainPos = Commands.parseChainPosFromInitCommand(bytes);
+            byte middlebox = Commands.parseMiddleboxFromInitCommand(bytes);
+
             System.out.println(String.format(RUN_CLICK_INSTANCE, middlebox));
             Process p = Runtime.getRuntime().exec(String.format(RUN_CLICK_INSTANCE, middlebox));
         }//try

@@ -19,7 +19,7 @@ public class FaultTolerantChain {
     private ArrayList<Byte> MBs;
 //    ArrayList<Host> replicaMapping;
     ArrayList<Ip4Address> replicaMapping;
-    private short firstTag;
+    private byte firstTag;
 
     public FaultTolerantChain(int chainId, Ip4Address source, Ip4Address destination, ArrayList<Byte> MBs, byte f)
             throws InvalidParameterException {
@@ -123,11 +123,11 @@ public class FaultTolerantChain {
         return chainIpAddresses;
     }
 
-    public short getFirstTag() {
+    public byte getFirstTag() {
         return firstTag;
     }
 
-    public void setFirstTag(short firstTag) {
+    public void setFirstTag(byte firstTag) {
         this.firstTag = firstTag;
     }
 }

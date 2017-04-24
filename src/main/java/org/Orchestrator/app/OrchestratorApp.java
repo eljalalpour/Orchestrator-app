@@ -32,7 +32,7 @@ public class OrchestratorApp {
     private static final int FORWARD_PRIORITY = 10;
 //    private static final int REMOVE_TAG_PRIORITY = 10;
 //    private static final int INCREMENT_TAG_PRIORITY = 10;
-    private static short tag = 1;
+    private static byte tag = 1;
 
     private ApplicationId appId;
 
@@ -66,10 +66,11 @@ public class OrchestratorApp {
      * @param ipAddr the IP of the host in which the click-instance must be initialized
      * @throws IOException
      */
-    private void init(byte command, byte middleBox, InetAddress ipAddr, FaultTolerantChain chain) throws IOException {
+    private void init(byte command, byte middleBox, InetAddress ipAddr,
+                      byte chainPos, byte firstVlanTag, FaultTolerantChain chain) throws IOException {
         Socket replicaSocket = new Socket(ipAddr, AGENT_PORT);
         OutputStream out = replicaSocket.getOutputStream();
-        out.write(Commands.getInitCommand(command, middleBox, chain));
+        out.write(Commands.getInitCommand(command, middleBox, chainPos, firstVlanTag, chain));
         out.close();
     }
 
@@ -80,19 +81,19 @@ public class OrchestratorApp {
     private void place(FaultTolerantChain chain) throws IOException {
         //TODO: check if we have enough hosts that we can install replicas on them
 
-//        for (int i = 0; i < chain.length(); ++i) {
-//            Host host = availableHosts.iterator().next();
-//            Ip4Address ip = host.ipAddresses().iterator().next().getIp4Address();
-//            init(Commands.MB_INIT, chain.getMB(i), ip.toInetAddress(), chain);
-//            availableHosts.iterator().remove();
-//            chain.replicaMapping.add(ip);
-//        }//for
+        for (byte i = 0; i < chain.length(); ++i) {
+            Host host = availableHosts.iterator().next();
+            Ip4Address ip = host.ipAddresses().iterator().next().getIp4Address();
+            init(Commands.MB_INIT, chain.getMB(i), ip.toInetAddress(), i, chain.getFirstTag(), chain);
+            availableHosts.iterator().remove();
+            chain.replicaMapping.add(ip);
+        }//for
         Ip4Address ip = Ip4Address.valueOf("127.0.0.1");
-        init(Commands.MB_INIT, chain.getMB(0), ip.toInetAddress(), chain);
+        init(Commands.MB_INIT, chain.getMB(0), ip.toInetAddress(), (byte)0, chain.getFirstTag(), chain);
         chain.replicaMapping.add(ip);
 
         Ip4Address ip2 = Ip4Address.valueOf("10.20.159.142");
-        init(Commands.MB_INIT, chain.getMB(1), ip2.toInetAddress(), chain);
+        init(Commands.MB_INIT, chain.getMB(1), ip.toInetAddress(), (byte)1, chain.getFirstTag(), chain);
         chain.replicaMapping.add(ip2);
     }
 
@@ -321,12 +322,13 @@ public class OrchestratorApp {
             HostId hostid = (HostId) deviceEvent.port().element().id();
             short i = 0;
             for(FaultTolerantChain ch : placedChains) {
-                short j = 0;
                 for(Host host : hostService.getHostsByIp(ch.replicaMapping.iterator().next())) {
+                byte j = 0;
                     if(host.id().equals(hostid)) {
                         Host availableHost = availableHosts.iterator().next();
                         IpAddress hostIp = availableHost.ipAddresses().iterator().next();
-                        init(Commands.MB_INIT_AND_FETCH_STATE, ch.getMB(j), hostIp.toInetAddress(), ch);
+                        init(Commands.MB_INIT_AND_FETCH_STATE, ch.getMB(j),
+                                hostIp.toInetAddress(), j, ch.getFirstTag(), ch);
                         availableHosts.iterator().remove();
                         ch.replicaMapping.remove(j);
                         ch.replicaMapping.add(j, hostIp.getIp4Address());

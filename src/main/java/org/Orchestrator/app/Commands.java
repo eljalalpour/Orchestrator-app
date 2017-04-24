@@ -1,17 +1,17 @@
 package org.Orchestrator.app;
 
+import com.sun.tools.javac.util.Pair;
 import org.onlab.packet.Ip4Address;
 import java.nio.ByteBuffer;
 
-/**
- * Created by ejalalpo on 4/13/17.
- */
 public class Commands {
     public static final int CMD_OFFSET = 0;
     public static final int MB_OFFSET = 1;
-    public static final int F_OFFSET = 2;
-    public static final int CHAIN_LENGTH_OFFSET = 3;
-    public static final int FIRST_IP_OFFSET = 4;
+    public static final int CHAIN_POS_OFFSET = 2;
+    public static final int F_OFFSET = 3;
+    public static final int FIRST_VLAN_TAG_OFFSET = 4;
+    public static final int CHAIN_LENGTH_OFFSET = 5;
+    public static final int FIRST_IP_OFFSET = 6;
     public static final int IP_LEN = 4;
     public static final int MB_LEN = 1;
     public static final int REPLICA_LEN = IP_LEN + MB_LEN;
@@ -30,23 +30,30 @@ public class Commands {
     // This command is used during the failure recovery.
     public static final byte GET_STATE = 0x02;
 
-    public static byte[] getStateCommand(byte MBType) {
+    /**
+     * Creating the byte stream of a get-state-command
+     * @param middlebox The type of the middlebox
+     * @return The byte stream of the get-command
+     */
+    public static byte[] getStateCommand(byte middlebox) {
         byte[] command = new byte[GET_STATE_CMD_LEN];
         command[CMD_OFFSET] = GET_STATE;
-        command[MB_OFFSET] = MBType;
+        command[MB_OFFSET] = middlebox;
         return command;
     }
 
     /**
      * The format of message is as follows
-     * Command Middlebox F ChainLength IP1-MB1  IP2-MB2  ...
-     * 0       1         2 3           4        9        4 + ChainLength * 5
-     * @param command either initialize Commands.MB_INIT or Commands.MB_INIT_AND_FETCH_STATE
-     * @param middleBox the middlebox that the agent should initialize inside the click-instance
-     * @param chain the chain
-     * @return the byte string of the command
+     * Command Middlebox ChainPos F FirstVLANTag ChainLength IP1-MB1  IP2-MB2  ...
+     * 0       1         2        3 4            5           6        11       5 + ChainLength * 5
+     * @param command Either initialize Commands.MB_INIT or Commands.MB_INIT_AND_FETCH_STATE
+     * @param middleBox The middlebox that the agent should initialize inside the click-instance
+     * @param chainPos The position of the middlebox in the chain
+     * @param firstVlanTag The Vlan tag is used for routing
+     * @param chain The chain
+     * @return The byte string of the command
      */
-    public static byte[] getInitCommand(byte command, byte middleBox, FaultTolerantChain chain) {
+    public static byte[] getInitCommand(byte command, byte middleBox, byte chainPos, byte firstVlanTag, FaultTolerantChain chain) {
         byte ipsSize = (byte) ((Integer.SIZE / Byte.SIZE + 1) * chain.length());
         ByteBuffer buffer = (command == Commands.MB_INIT_AND_FETCH_STATE) ?
                 ByteBuffer.allocate(ipsSize + 4) :
@@ -54,7 +61,9 @@ public class Commands {
 
         buffer.put(command);
         buffer.put(middleBox);
+        buffer.put(chainPos);
         buffer.put(chain.getF());
+        buffer.put(firstVlanTag);
 
         // If the command include fetch state, then the orchestrator has to provide the IP addresses of the other agents
         if (command == Commands.MB_INIT_AND_FETCH_STATE) {
@@ -64,30 +73,51 @@ public class Commands {
                 buffer.put(chain.replicaMapping.get(i).toOctets());
                 buffer.put(chain.getMB(i));
             }//for
-            buffer.put(Ip4Address.valueOf("127.0.0.1").toOctets());
-            buffer.put(chain.getMB(0));
-            buffer.put(Ip4Address.valueOf("10.20.159.142").toOctets());
-            buffer.put(chain.getMB(1));
+//            buffer.put(Ip4Address.valueOf("127.0.0.1").toOctets());
+//            buffer.put(chain.getMB(0));
+//            buffer.put(Ip4Address.valueOf("10.20.159.142").toOctets());
+//            buffer.put(chain.getMB(1));
         }//if
         return buffer.array();
     }
 
-    public static FaultTolerantChain parseInitResponse(byte[] bytes) {
-        // Parse the rest of the command
+    /**
+     * Parses an init response
+     * @param bytes the byte stream of the init response
+     * @return A pair of byte (i.e., a middlebox that must be initialized) and a FaultTolerantChain.
+     */
+    public static FaultTolerantChain parseChainFromInitCommand(byte[] bytes) {
+        byte firstVlanTag = bytes[FIRST_VLAN_TAG_OFFSET];
+        byte f = bytes[F_OFFSET];
         byte ipsLen = bytes[CHAIN_LENGTH_OFFSET];
-        // Find the position of this replica in the chain
 
         FaultTolerantChain chain = new FaultTolerantChain();
-        chain.setF(bytes[F_OFFSET]);
+        chain.setF(f);
+        chain.setFirstTag(firstVlanTag);
 
         for (byte i = 0; i < ipsLen; ++i) {
-            //TODO: Make sure that Ip4Address.valueOf function works as expected
-//            ipAddrs.add(Ip4Address.valueOf(bytes, i * REPLICA_LEN + FIRST_IP_OFFSET));
-//            types.add(bytes[i * REPLICA_LEN + FIRST_IP_OFFSET + IP_LEN]);
             chain.appendToChain(bytes[i * REPLICA_LEN + FIRST_IP_OFFSET + IP_LEN]);
             chain.replicaMapping.add(Ip4Address.valueOf(bytes, i * REPLICA_LEN + FIRST_IP_OFFSET));
         }//for
 
         return chain;
+    }
+
+    /**
+     * Parsing the middlebox from the init command
+     * @param bytes the byte-stream of the init command
+     * @return a byte representing the middlebox
+     */
+    public static byte parseMiddleboxFromInitCommand(byte[] bytes) {
+        return bytes[MB_OFFSET];
+    }
+
+    /**
+     * Parsing the chain-position from the init command
+     * @param bytes the byte-stream of the init command
+     * @return A byte representing the position of the chain
+     */
+    public static byte parseChainPosFromInitCommand(byte[] bytes) {
+        return bytes[CHAIN_POS_OFFSET];
     }
 }
