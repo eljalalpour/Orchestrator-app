@@ -3,7 +3,7 @@ package org.Agent.app;
 import org.Orchestrator.app.Commands;
 import org.Orchestrator.app.FaultTolerantChain;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.cli.*;
+//import org.apache.commons.cli.*;
 import org.onlab.packet.Ip4Address;
 import org.onosproject.net.Host;
 
@@ -113,60 +113,60 @@ public class Agent {
     }
 
     public static void main (String args[]) {
-        Agent agent = new Agent();
-        CommandLineParser parser = new DefaultParser();
-        Options options = new Options();
-        options.addOption( "i", "ip", true, "The ip address of the host that " +
-                "this agent is running on" );
-        try {
-            // parse the command line arguments
-            CommandLine line = parser.parse(options, args);
-            agent.ipAddr = Ip4Address.valueOf(line.getOptionValue("ip"));
-        }//try
-        catch( ParseException exp ) {
-            System.out.println( "Unexpected exception:" + exp.getMessage() );
-        }//catch
-
-
-        ServerSocket serverSocket;
-        try {
-            serverSocket = new ServerSocket(DEFAULT_AGENT_PORT, 0, agent.ipAddr.toInetAddress());
-        } catch (IOException e) {
-            System.out.println(e);
-            return;
-        }//catch
-        while (true) {
-            try {
-                clientSocket = serverSocket.accept();
-                InputStream is = clientSocket.getInputStream();
-                byte[] bytes = IOUtils.toByteArray(is);
-
-                if (bytes.length > 0) {
-                    switch (bytes[CMD_OFFSET]) {
-                        case Commands.MB_INIT:
-                            agent.handleInit(false, bytes);
-                            break;
-
-                        case Commands.MB_INIT_AND_FETCH_STATE:
-                            agent.handleInit(true, bytes);
-                            break;
-
-                        case Commands.GET_STATE:
-                            byte[] states = agent.handleGetState(bytes);
-                            OutputStream out = clientSocket.getOutputStream();
-                            out.write(states);
-                            break;
-
-                        default:
-                            //TODO: Appropriate action when the command is not known
-                            break;
-                    }//switch
-                }//if
-            }//try
-            catch(IOException ioExc) {
-                ioExc.printStackTrace();
-                return;
-            }//catch
-        }//while
+//        Agent agent = new Agent();
+//        CommandLineParser parser = new DefaultParser();
+//        Options options = new Options();
+//        options.addOption( "i", "ip", true, "The ip address of the host that " +
+//                "this agent is running on" );
+//        try {
+//            // parse the command line arguments
+//            CommandLine line = parser.parse(options, args);
+//            agent.ipAddr = Ip4Address.valueOf(line.getOptionValue("ip"));
+//        }//try
+//        catch( ParseException exp ) {
+//            System.out.println( "Unexpected exception:" + exp.getMessage() );
+//        }//catch
+//
+//
+//        ServerSocket serverSocket;
+//        try {
+//            serverSocket = new ServerSocket(DEFAULT_AGENT_PORT, 0, agent.ipAddr.toInetAddress());
+//        } catch (IOException e) {
+//            System.out.println(e);
+//            return;
+//        }//catch
+//        while (true) {
+//            try {
+//                clientSocket = serverSocket.accept();
+//                InputStream is = clientSocket.getInputStream();
+//                byte[] bytes = IOUtils.toByteArray(is);
+//
+//                if (bytes.length > 0) {
+//                    switch (bytes[CMD_OFFSET]) {
+//                        case Commands.MB_INIT:
+//                            agent.handleInit(false, bytes);
+//                            break;
+//
+//                        case Commands.MB_INIT_AND_FETCH_STATE:
+//                            agent.handleInit(true, bytes);
+//                            break;
+//
+//                        case Commands.GET_STATE:
+//                            byte[] states = agent.handleGetState(bytes);
+//                            OutputStream out = clientSocket.getOutputStream();
+//                            out.write(states);
+//                            break;
+//
+//                        default:
+//                            //TODO: Appropriate action when the command is not known
+//                            break;
+//                    }//switch
+//                }//if
+//            }//try
+//            catch(IOException ioExc) {
+//                ioExc.printStackTrace();
+//                return;
+//            }//catch
+//        }//while
     }
 }

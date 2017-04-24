@@ -2,7 +2,10 @@ package org.Orchestrator.app;
 
 import org.apache.felix.scr.annotations.*;
 import org.onlab.packet.Ip4Address;
-import org.onlab.packet.MplsLabel;
+import org.onlab.packet.IpAddress;
+import org.onlab.packet.VlanId;
+import org.onosproject.app.ApplicationService;
+import org.onosproject.core.ApplicationId;
 import org.onosproject.net.*;
 import org.onosproject.net.device.DeviceListener;
 import org.onosproject.net.device.DeviceService;
@@ -17,6 +20,9 @@ import java.io.*;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Set;
 
 @Component(immediate = true)
 public class OrchestratorApp {
@@ -25,7 +31,10 @@ public class OrchestratorApp {
     private static final int FORWARD_PRIORITY = 10;
     private static final int REMOVE_TAG_PRIORITY = 10;
     private static final int INCREMENT_TAG_PRIORITY = 10;
-    private static int tag = 1;
+    private static short tag = 1;
+
+    private ApplicationId appId;
+
     private Iterable<Host> availableHosts;
     private ArrayList<FaultTolerantChain> placedChains = new ArrayList<>();
 
@@ -43,6 +52,11 @@ public class OrchestratorApp {
 
     @Reference(cardinality = ReferenceCardinality.MANDATORY_UNARY)
     private FlowRuleService flowRuleService;
+
+    @Reference(cardinality = ReferenceCardinality.MANDATORY_UNARY)
+    private ApplicationService applicationService;
+
+
 
     /**
      * The orchestrator sends a MB_INIT message to the replica.
@@ -81,48 +95,86 @@ public class OrchestratorApp {
         chain.replicaMapping.add(ip2);
     }
 
-    private void route(FaultTolerantChain chain){
-      ArrayList<Ip4Address> chainIpAddresses = chain.getChainIpAddresses();
-      Host src = hostService.getHostsByIp(chain.getSource()).iterator().next();
-      Host dst = hostService.getHostsByIp(chain.getDestination()).iterator().next();
-      for(byte i = 0; i < chainIpAddresses.size(); ++i) {
-          Host s = hostService.getHostsByIp(chainIpAddresses.get(i)).iterator().next();
-          Host t = hostService.getHostsByIp(chainIpAddresses.get(i+1)).iterator().next();
-          Path path = findPath(s, t);
-          for(Link l : path.links()) {
-              DeviceId deviceId = l.src().deviceId();
-              if(hostService.getConnectedHosts(deviceId).iterator().next().equals(s) && s.equals(src)) {
-                    putTagRule(deviceId, src.location().port());
-                    log.info("putTagRule on {} ", deviceId);
-              }
-              else if(hostService.getConnectedHosts(deviceId).iterator().next().equals(t) && t.equals(dst)) {
-                    removeTagRule(deviceId, dst.location().port());
-                    log.info("removeTagRule on {}", deviceId);
-              }
-              else if(hostService.getConnectedHosts(deviceId).iterator().next().equals(t)) {
-                    incrementTagRule(deviceId, t.location().port());
-                    log.info("incrementTagRule on {}", deviceId);
-              }
-              else {
-                    forwardRule(deviceId, l.src().port());
-                    log.info("forwardRule on {}", deviceId);
-              }
-          }
-      }
+    private boolean isIn(Set<Host> hosts, Host host) {
+        boolean result = false;
+        for (Host h : hosts) {
+            if (host.equals(h)) {
+                result = true;
+                break;
+            }//if
+        }//for
+        return result;
     }
 
-    private void putTagRule(DeviceId deviceId, PortNumber srcPort) {
+    private void route(FaultTolerantChain chain){
+        ArrayList<Ip4Address> chainIpAddresses = chain.getChainIpAddresses();
+
+        // We assume that an IP address is assigned to a single host
+        for(byte i = 0; i < chainIpAddresses.size() - 1; ++i) {
+            Host s = hostService.getHostsByIp(chainIpAddresses.get(i)).iterator().next();
+            Host t = hostService.getHostsByIp(chainIpAddresses.get(i + 1)).iterator().next();
+            route(chain, s, t);
+        }//for
+    }
+
+    private void route(FaultTolerantChain chain, Host s, Host t) {
+        Host src = hostService.getHostsByIp(chain.getSource()).iterator().next();
+        Host dst = hostService.getHostsByIp(chain.getDestination()).iterator().next();
+        try {
+            for (ConnectPoint cp: findPath(s, t)) {
+                DeviceId deviceId = cp.deviceId();
+
+                Set<Host> hosts = hostService.getConnectedHosts(deviceId);
+                log.info("Hosts connected to {}", deviceId);
+                for (Host h: hosts) {
+                    log.info(h.id().toString());
+                }//for
+
+                boolean sIn = isIn(hosts, s);
+                boolean tIn = isIn(hosts, t);
+
+                log.info("sIn: {}, tIn: {}", sIn, tIn);
+
+                if (sIn && s.equals(src)) {
+                    putTagRule(deviceId, src.location().port(), cp.port());
+                    log.info("putTagRule on {} ", cp);
+                }//if
+                else if (tIn && t.equals(dst)) {
+                    forwardRule(deviceId, dst.location().port());
+                    log.info("removeTagRule on {}", cp);
+                }//else if
+                else if (tIn) {
+                    incrementTagRule(deviceId, t.location().port());
+                    log.info("incrementTagRule on {}", cp);
+                }//else if
+                else {
+                    forwardRule(deviceId, cp.port());
+                    log.info("forwardRule on {}", cp);
+                }//else
+            }//for
+        }//try
+        catch(NoSuchElementException nseExc) {
+            nseExc.printStackTrace();
+        }//catch
+        // TODO a Host-to-Host intent between the last and fist middlebox
+    }
+
+    private void putTagRule(DeviceId deviceId, PortNumber srcPort, PortNumber outputPort) {
         TrafficSelector.Builder selectorBuilder = DefaultTrafficSelector.builder();
         TrafficSelector selector = selectorBuilder
                 .matchInPort(srcPort)
+                .matchVlanId(VlanId.NONE)
                 .build();
+
         TrafficTreatment.Builder treatmentBuilder = DefaultTrafficTreatment.builder();
         TrafficTreatment treatment = treatmentBuilder
-                .pushMpls()
-                .setMpls(MplsLabel.mplsLabel(tag))
+//                .pushVlan()
+                .setVlanId(VlanId.vlanId(tag))
+                .setOutput(outputPort)
                 .build();
         FlowRule.Builder flowBuilder = new DefaultFlowRule.Builder();
         FlowRule flowRule = flowBuilder
+                .fromApp(appId)
                 .forDevice(deviceId).withSelector(selector).withTreatment(treatment)
                 .makePermanent()
                 .withPriority(PUT_TAG_PRIORITY).build();
@@ -132,8 +184,8 @@ public class OrchestratorApp {
     private void forwardRule(DeviceId deviceId, PortNumber outputPort) {
         TrafficSelector.Builder selectorBuilder = DefaultTrafficSelector.builder();
         TrafficSelector selector = selectorBuilder
-                .matchEthType((short) 0x8847)
-                .matchMplsLabel(MplsLabel.mplsLabel(tag))
+                //.matchEthType((short) 0x8847)
+                .matchVlanId(VlanId.vlanId(tag))
                 .build();
         TrafficTreatment.Builder treatmentBuilder = DefaultTrafficTreatment.builder();
         TrafficTreatment treatment = treatmentBuilder
@@ -141,97 +193,151 @@ public class OrchestratorApp {
                 .build();
         FlowRule.Builder flowBuilder = new DefaultFlowRule.Builder();
         FlowRule flowRule = flowBuilder
+                .fromApp(appId)
                 .forDevice(deviceId).withSelector(selector).withTreatment(treatment)
                 .makePermanent()
                 .withPriority(FORWARD_PRIORITY).build();
         flowRuleService.applyFlowRules(flowRule);
     }
 
-    private void removeTagRule(DeviceId deviceId, PortNumber dstPort) {
-        TrafficSelector.Builder selectorBuilder = DefaultTrafficSelector.builder();
-        TrafficSelector selector = selectorBuilder
-                .matchEthType((short) 0x8847)
-                .matchMplsLabel(MplsLabel.mplsLabel(tag))
-                .build();
-        TrafficTreatment.Builder treatmentBuilder = DefaultTrafficTreatment.builder();
-        TrafficTreatment treatment = treatmentBuilder
-                .popMpls()
-                .setOutput(dstPort)
-                .build();
-        FlowRule.Builder flowBuilder = new DefaultFlowRule.Builder();
-        FlowRule flowRule = flowBuilder
-                .forDevice(deviceId).withSelector(selector).withTreatment(treatment)
-                .makePermanent()
-                .withPriority(REMOVE_TAG_PRIORITY).build();
-        flowRuleService.applyFlowRules(flowRule);
-    }
+//    private void removeTagRule(DeviceId deviceId, PortNumber dstPort) {
+//        TrafficSelector.Builder selectorBuilder = DefaultTrafficSelector.builder();
+//        TrafficSelector selector = selectorBuilder
+//                //.matchEthType((short) 0x8847)
+//                .matchVlanId(VlanId.vlanId(tag))
+//                .build();
+//        TrafficTreatment.Builder treatmentBuilder = DefaultTrafficTreatment.builder();
+//        TrafficTreatment treatment = treatmentBuilder
+////                .popVlan()
+//                .setOutput(dstPort)
+//                .build();
+//        FlowRule.Builder flowBuilder = new DefaultFlowRule.Builder();
+//        FlowRule flowRule = flowBuilder
+//                .fromApp(appId)
+//                .forDevice(deviceId).withSelector(selector).withTreatment(treatment)
+//                .makePermanent()
+//                .withPriority(REMOVE_TAG_PRIORITY).build();
+//        flowRuleService.applyFlowRules(flowRule);
+//    }
 
     private void incrementTagRule(DeviceId deviceId, PortNumber outputPort) {
         TrafficSelector.Builder selectorBuilder = DefaultTrafficSelector.builder();
         TrafficSelector selector = selectorBuilder
-                .matchEthType((short) 0x8847)
-                .matchMplsLabel(MplsLabel.mplsLabel(tag))
+                //.matchEthType((short) 0x8847)
+                .matchVlanId(VlanId.vlanId(tag))
                 .build();
         TrafficTreatment.Builder treatmentBuilder = DefaultTrafficTreatment.builder();
         TrafficTreatment treatment = treatmentBuilder
-                .setMpls(MplsLabel.mplsLabel(++tag))
+                .setVlanId(VlanId.vlanId(++tag))
                 .setOutput(outputPort)
                 .build();
         FlowRule.Builder flowBuilder = new DefaultFlowRule.Builder();
         FlowRule flowRule = flowBuilder
+                .fromApp(appId)
                 .forDevice(deviceId).withSelector(selector).withTreatment(treatment)
                 .makePermanent()
                 .withPriority(INCREMENT_TAG_PRIORITY).build();
         flowRuleService.applyFlowRules(flowRule);
     }
 
-    private Path findPath(Host s, Host t) {
-        Path path = topologyService.getPaths(topologyService.currentTopology(), s.location().deviceId(), t.location().deviceId()).iterator().next();
-        return path;
+//    private Path findPath(Host s, Host t) {
+//        Set<Path> paths = topologyService.getPaths(topologyService.currentTopology(), s.location().deviceId(), t.location().deviceId());
+//        log.info("paths size? {}", paths.size());
+//
+//        return topologyService.getPaths(topologyService.currentTopology(), s.location().deviceId(), t.location().deviceId()).iterator().next();
+//    }
+
+    /**
+     * Find the path between two hosts. We assume that the network is connected, therefore there is always a path
+     * between two hosts
+     * @param s First host
+     * @param t Second host
+     * @return The ordered ids of devices in the path between s and t
+     */
+    private ArrayList<ConnectPoint> findPath(Host s, Host t) {
+        ArrayList<ConnectPoint> devices = new ArrayList<>();
+        try {
+            Path path = topologyService.getPaths(
+                    topologyService.currentTopology(),
+                    s.location().deviceId(),
+                    t.location().deviceId()).iterator().next();
+            List<Link> links = path.links();
+            for (Link l : links) {
+                devices.add(l.src());
+            }//for
+            devices.add(links.get(links.size() - 1).dst());
+        }//try
+        catch(NoSuchElementException nExp){
+            // If no path was found, it means that s and t are connected to a same device
+            devices.add(t.location());
+        }//catch
+        return devices;
     }
 
 
-    private void reroute(FaultTolerantChain chain) {
+    private void reroute(FaultTolerantChain chain, int failedIndex) {
         //TODO
+        if(failedIndex == 0) {
+
+        }
     }
 
     private void deployChain(String srcChainDst, byte f) {
-        try {
+//        try {
             FaultTolerantChain chain = FaultTolerantChain.parse(srcChainDst, f);
-            place(chain);
-            placedChains.add(chain);
+//            place(chain);
+//            placedChains.add(chain);
+            chain.replicaMapping.add(Ip4Address.valueOf("192.168.200.14"));
             route(chain);
-        }//try
-        catch (IOException ioExc) {
-
-        }//catch
+//        }//try
+//        catch (IOException ioExc) {
+//
+//        }//catch
     }
 
     private void recover(DeviceEvent deviceEvent) {
         // TODO: find the failed host if any, and remove it from replica mapping, replace with new host
+        try {
+            HostId hostid = (HostId) deviceEvent.port().element().id();
+            int i = 0, j = 0;
+            for(FaultTolerantChain ch : placedChains) {
+                for(Host host : hostService.getHostsByIp(ch.replicaMapping.iterator().next())) {
+                    if(host.id().equals(hostid)) {
+                        Host availableHost = availableHosts.iterator().next();
+                        IpAddress hostIp = availableHost.ipAddresses().iterator().next();
+                        init(Commands.MB_INIT_AND_FETCH_STATE, ch.getMB(j), hostIp.toInetAddress(), ch);
+                        availableHosts.iterator().remove();
+                        ch.replicaMapping.remove(j);
+                        ch.replicaMapping.add(j, hostIp.getIp4Address());
+                        reroute(ch, j);
+                    }//if
+                    ++j;
+                }//for
+                ++i;
+            }//for
+        }//try
+        catch(IOException ioExc) {
+
+        }//catch
     }
 
     @Activate
     protected void activate()
     {
-
+        this.appId = applicationService.getId("org.orchestrator.app");
         availableHosts = hostService.getHosts();
 
         // Listen for failures
         deviceService.addListener(deviceListener);
 
-        log.info("Started");
-
-        log.info(" building a new falut tolerance chain - 1");
-        OrchestratorApp orch = new OrchestratorApp();
-        log.info(" building a new falut tolerance chain - 2");
-        orch.deployChain("127.0.0.1,0,1,127.0.0.1", (byte)1);
+        deployChain("192.168.200.11,0,192.168.200.13", (byte)0);
     }
 
     @Deactivate
     protected void deactivate()
     {
         log.info("Stopped");
+        flowRuleService.removeFlowRulesById(appId);
     }
 
     /**
@@ -258,6 +364,6 @@ public class OrchestratorApp {
 
     public static void main(String[] args) {
         OrchestratorApp orch = new OrchestratorApp();
-        orch.deployChain("127.0.0.1,0,1,127.0.0.1", (byte)1);
+        orch.deployChain("127.0.0.1,0,1,127.0.0.1", (byte)0);
     }
 }

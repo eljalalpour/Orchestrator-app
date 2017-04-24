@@ -64,7 +64,6 @@ public class Commands {
                 buffer.put(chain.replicaMapping.get(i).toOctets());
                 buffer.put(chain.getMB(i));
             }//for
-
             buffer.put(Ip4Address.valueOf("127.0.0.1").toOctets());
             buffer.put(chain.getMB(0));
             buffer.put(Ip4Address.valueOf("10.20.159.142").toOctets());
