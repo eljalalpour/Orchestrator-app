@@ -1,6 +1,5 @@
 package org.Orchestrator.app;
 
-import com.sun.tools.javac.util.Pair;
 import org.onlab.packet.Ip4Address;
 import java.nio.ByteBuffer;
 
@@ -56,8 +55,8 @@ public class Commands {
     public static byte[] getInitCommand(byte command, byte middleBox, byte chainPos, byte firstVlanTag, FaultTolerantChain chain) {
         byte ipsSize = (byte) ((Integer.SIZE / Byte.SIZE + 1) * chain.length());
         ByteBuffer buffer = (command == Commands.MB_INIT_AND_FETCH_STATE) ?
-                ByteBuffer.allocate(ipsSize + 4) :
-                ByteBuffer.allocate(3);
+                ByteBuffer.allocate(ipsSize + 6) :
+                ByteBuffer.allocate(5);
 
         buffer.put(command);
         buffer.put(middleBox);
