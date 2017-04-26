@@ -3,17 +3,19 @@ package org.Agent.app;
 import org.Orchestrator.app.Commands;
 import org.Orchestrator.app.FaultTolerantChain;
 import org.apache.commons.cli.*;
+import org.apache.commons.io.IOExceptionWithCause;
 import org.apache.commons.io.IOUtils;
 import org.onlab.packet.Ip4Address;
 
 import java.io.*;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 
 public class Agent {
     public static final int DEFAULT_AGENT_PORT = 2222;
-    public static final int CLICK_INS_PORT = 33333;
+    public static final int CLICK_INS_PORT = 10001;
     private static Socket clientSocket = null;
     private Ip4Address ipAddr = null;
 
@@ -39,14 +41,14 @@ public class Agent {
         if (fetchState) {
             // Find the position of this replica in the chain
             FaultTolerantChain chain = Commands.parseChainFromInitCommand(bytes);
-            byte chainPos = -1;
             ArrayList<Ip4Address> ipAddrs = chain.getReplicaMapping();
-            for (byte i = 0; i < ipAddrs.size(); ++i) {
-                if (ipAddrs.get(i).equals(ipAddr)) {
-                    chainPos = i;
-                    break;
-                }//if
-            }//for
+            byte chainPos = Commands.parseChainPosFromInitCommand(bytes);
+//            for (byte i = 0; i < ipAddrs.size(); ++i) {
+//                if (ipAddrs.get(i).equals(ipAddr)) {
+//                    chainPos = i;
+//                    break;
+//                }//if
+//            }//for
 
             byte f = chain.getF();
             byte n = (byte)chain.length();
@@ -112,6 +114,40 @@ public class Agent {
         if (thread.getSuccess())
             return thread.getMBState();
         return null;
+    }
+
+    private ArrayList<Byte> stripClickJunk(byte[] bytes) {
+        ArrayList<Byte> result = new ArrayList<>();
+        int count = 0;
+        for (byte b: bytes) {
+            if (count >= 4) {
+                result.add(b);
+            }//if
+            else {
+                if (b == '\n' || b == '\r')
+                    ++count;
+            }//else
+        }//for
+
+        return result;
+    }
+
+    public ArrayList<Byte> readFromClickInstance(){
+        ArrayList<Byte> states = null;
+
+        try {
+            Socket socket = new Socket(ipAddr.toInetAddress(), CLICK_INS_PORT);
+            InputStream is = socket.getInputStream();
+
+            states = stripClickJunk(IOUtils.toByteArray(is));
+
+
+        }//try
+        catch(IOException ioExc) {
+            ioExc.printStackTrace();
+        }//catch
+
+        return states;
     }
 
     public static void main (String args[]) {

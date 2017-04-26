@@ -12,6 +12,7 @@ import java.net.SocketTimeoutException;
 public class FetchStateThread extends Thread {
     //TODO: Find an appropriate timeout value
     public static final int SO_TIMEOUT = 200;
+    public static final String GET_STATE_COMMAND = "read se.g %s";
 
     private Ip4Address ipAddr;
     private int port;
