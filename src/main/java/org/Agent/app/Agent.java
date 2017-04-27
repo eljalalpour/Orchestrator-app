@@ -6,6 +6,7 @@ import org.apache.commons.cli.*;
 import org.apache.commons.io.IOExceptionWithCause;
 import org.apache.commons.io.IOUtils;
 import org.onlab.packet.Ip4Address;
+import org.onosproject.net.Host;
 
 import java.io.*;
 import java.net.InetAddress;
@@ -32,16 +33,16 @@ public class Agent {
         return result;
     }
 
-    private static int whoToAsk(byte f, byte n, byte i, byte chainPos) {
-        return (chainPos - f + i + n) % n;
+    private static byte whoToAsk(byte f, byte n, byte i, byte chainPos) {
+        return (byte)((chainPos - f + i + n) % n);
     }
 
     public void handleInit(boolean fetchState, byte[] bytes) {
         // Fetch the state
         if (fetchState) {
             // Find the position of this replica in the chain
-            FaultTolerantChain chain = Commands.parseChainFromInitCommand(bytes);
-            ArrayList<Ip4Address> ipAddrs = chain.getReplicaMapping();
+//            FaultTolerantChain chain = Commands.parseChainFromInitCommand(bytes);
+            ArrayList<Ip4Address> ip4Addresses = Commands.parseIpAddresses(bytes);
             byte chainPos = Commands.parseChainPosFromInitCommand(bytes);
 //            for (byte i = 0; i < ipAddrs.size(); ++i) {
 //                if (ipAddrs.get(i).equals(ipAddr)) {
@@ -50,8 +51,8 @@ public class Agent {
 //                }//if
 //            }//for
 
-            byte f = chain.getF();
-            byte n = (byte)chain.length();
+            byte f = Commands.parseF(bytes);
+            byte n = (byte)Commands.parseLenght(bytes);
             int[] whoToAsk = new int[f + 1];
             for (byte i = 0; i < whoToAsk.length; ++i) whoToAsk[i] = whoToAsk(f, n, i, chainPos);
             whoToAsk[chainPos] = (chainPos + 1) % n;
@@ -65,8 +66,8 @@ public class Agent {
                 for (byte i = 0; i < whoToAsk.length; ++i) {
                     if (successes[i]) continue;
 
-                    threads[i] = new FetchStateThread(ipAddrs.get(whoToAsk[i]),
-                            DEFAULT_AGENT_PORT, chain.getMB(whoToAsk(f, n, i, chainPos)));
+                    threads[i] = new FetchStateThread(ip4Addresses.get(whoToAsk[i]),
+                            DEFAULT_AGENT_PORT, whoToAsk(f, n, i, chainPos));
                     threads[i].start();
                 }//for
 
@@ -151,59 +152,59 @@ public class Agent {
     }
 
     public static void main (String args[]) {
-        Agent agent = new Agent();
-        CommandLineParser parser = new DefaultParser();
-        Options options = new Options();
-        options.addOption( "i", "ip", true, "The ip address of the host that " +
-                "this agent is running on" );
-        try {
-            // parse the command line arguments
-            CommandLine line = parser.parse(options, args);
-            agent.ipAddr = Ip4Address.valueOf(line.getOptionValue("ip"));
-        }//try
-        catch( ParseException exp ) {
-            System.out.println( "Unexpected exception:" + exp.getMessage() );
-        }//catch
-
-        ServerSocket serverSocket;
-        try {
-            serverSocket = new ServerSocket(DEFAULT_AGENT_PORT, 0, agent.ipAddr.toInetAddress());
-        } catch (IOException e) {
-            System.out.println(e);
-            return;
-        }//catch
-        while (true) {
-            try {
-                clientSocket = serverSocket.accept();
-                InputStream is = clientSocket.getInputStream();
-                byte[] bytes = IOUtils.toByteArray(is);
-
-                if (bytes.length > 0) {
-                    switch (bytes[CMD_OFFSET]) {
-                        case Commands.MB_INIT:
-                            agent.handleInit(false, bytes);
-                            break;
-
-                        case Commands.MB_INIT_AND_FETCH_STATE:
-                            agent.handleInit(true, bytes);
-                            break;
-
-                        case Commands.GET_STATE:
-                            byte[] states = agent.handleGetState(bytes);
-                            OutputStream out = clientSocket.getOutputStream();
-                            out.write(states);
-                            break;
-
-                        default:
-                            //TODO: Appropriate action when the command is not known
-                            break;
-                    }//switch
-                }//if
-            }//try
-            catch(IOException ioExc) {
-                ioExc.printStackTrace();
-                return;
-            }//catch
-        }//while
+//        Agent agent = new Agent();
+//        CommandLineParser parser = new DefaultParser();
+//        Options options = new Options();
+//        options.addOption( "i", "ip", true, "The ip address of the host that " +
+//                "this agent is running on" );
+//        try {
+//            // parse the command line arguments
+//            CommandLine line = parser.parse(options, args);
+//            agent.ipAddr = Ip4Address.valueOf(line.getOptionValue("ip"));
+//        }//try
+//        catch( ParseException exp ) {
+//            System.out.println( "Unexpected exception:" + exp.getMessage() );
+//        }//catch
+//
+//        ServerSocket serverSocket;
+//        try {
+//            serverSocket = new ServerSocket(DEFAULT_AGENT_PORT, 0, agent.ipAddr.toInetAddress());
+//        } catch (IOException e) {
+//            System.out.println(e);
+//            return;
+//        }//catch
+//        while (true) {
+//            try {
+//                clientSocket = serverSocket.accept();
+//                InputStream is = clientSocket.getInputStream();
+//                byte[] bytes = IOUtils.toByteArray(is);
+//
+//                if (bytes.length > 0) {
+//                    switch (bytes[CMD_OFFSET]) {
+//                        case Commands.MB_INIT:
+//                            agent.handleInit(false, bytes);
+//                            break;
+//
+//                        case Commands.MB_INIT_AND_FETCH_STATE:
+//                            agent.handleInit(true, bytes);
+//                            break;
+//
+//                        case Commands.GET_STATE:
+//                            byte[] states = agent.handleGetState(bytes);
+//                            OutputStream out = clientSocket.getOutputStream();
+//                            out.write(states);
+//                            break;
+//
+//                        default:
+//                            //TODO: Appropriate action when the command is not known
+//                            break;
+//                    }//switch
+//                }//if
+//            }//try
+//            catch(IOException ioExc) {
+//                ioExc.printStackTrace();
+//                return;
+//            }//catch
+//        }//while
     }
 }
