@@ -2,6 +2,7 @@ package org.Orchestrator.app;
 
 import org.onlab.packet.Ip4Address;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 
 public class Commands {
     public static final int CMD_OFFSET = 0;
@@ -43,8 +44,8 @@ public class Commands {
 
     /**
      * The format of message is as follows
-     * Command Middlebox ChainPos F FirstVLANTag ChainLength IP1-MB1  IP2-MB2  ...
-     * 0       1         2        3 4            5           6        11       5 + ChainLength * 5
+     * Command Middlebox ChainPos F FirstVLANTag ChainLength IP1  IP2  ...
+     * 0       1         2        3 4            5           6        10       4 + ChainLength * 4
      * @param command Either initialize Commands.MB_INIT or Commands.MB_INIT_AND_FETCH_STATE
      * @param middleBox The middlebox that the agent should initialize inside the click-instance
      * @param chainPos The position of the middlebox in the chain
@@ -69,8 +70,8 @@ public class Commands {
             buffer.put((byte)chain.length());
 
             for (int i = 0; i < chain.replicaMapping.size(); ++i){
-                buffer.put(chain.replicaMapping.get(i).toOctets());
-                buffer.put(chain.getMB(i));
+                buffer.put(chain.replicaMapping.get(i).ipAddresses().iterator().next().toOctets());
+//                buffer.put(chain.getMB(i));
             }//for
 //            buffer.put(Ip4Address.valueOf("127.0.0.1").toOctets());
 //            buffer.put(chain.getMB(0));
@@ -85,21 +86,41 @@ public class Commands {
      * @param bytes the byte stream of the init response
      * @return A pair of byte (i.e., a middlebox that must be initialized) and a FaultTolerantChain.
      */
-    public static FaultTolerantChain parseChainFromInitCommand(byte[] bytes) {
-        byte firstVlanTag = bytes[FIRST_VLAN_TAG_OFFSET];
-        byte f = bytes[F_OFFSET];
+//    public static FaultTolerantChain parseChainFromInitCommand(byte[] bytes) {
+//        byte firstVlanTag = bytes[FIRST_VLAN_TAG_OFFSET];
+//        byte f = bytes[F_OFFSET];
+//        byte ipsLen = bytes[CHAIN_LENGTH_OFFSET];
+//
+//        FaultTolerantChain chain = new FaultTolerantChain();
+//        chain.setF(f);
+//        chain.setFirstTag(firstVlanTag);
+//
+//        for (byte i = 0; i < ipsLen; ++i) {
+//            chain.appendToChain(bytes[i * REPLICA_LEN + FIRST_IP_OFFSET + IP_LEN]);
+//            chain.replicaMapping.add(Ip4Address.valueOf(bytes, i * REPLICA_LEN + FIRST_IP_OFFSET));
+//        }//for
+//
+//        return chain;
+//    }
+    public static byte parseFirstVlanTag(byte[] bytes) {
+        return bytes[FIRST_VLAN_TAG_OFFSET];
+    }
+
+    public static byte parseLenght(byte[] bytes) {
+        return bytes[CHAIN_LENGTH_OFFSET];
+    }
+
+    public static byte parseF(byte[] bytes) {
+        return bytes[F_OFFSET];
+    }
+
+    public static ArrayList<Ip4Address> parseIpAddresses(byte[] bytes) {
+        ArrayList<Ip4Address> IpAddresses = new ArrayList<Ip4Address>();
         byte ipsLen = bytes[CHAIN_LENGTH_OFFSET];
-
-        FaultTolerantChain chain = new FaultTolerantChain();
-        chain.setF(f);
-        chain.setFirstTag(firstVlanTag);
-
         for (byte i = 0; i < ipsLen; ++i) {
-            chain.appendToChain(bytes[i * REPLICA_LEN + FIRST_IP_OFFSET + IP_LEN]);
-            chain.replicaMapping.add(Ip4Address.valueOf(bytes, i * REPLICA_LEN + FIRST_IP_OFFSET));
+            IpAddresses.add(Ip4Address.valueOf(bytes, i * IP_LEN + FIRST_IP_OFFSET));
         }//for
-
-        return chain;
+        return IpAddresses;
     }
 
     /**
