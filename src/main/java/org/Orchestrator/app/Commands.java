@@ -106,7 +106,7 @@ public class Commands {
         return bytes[FIRST_VLAN_TAG_OFFSET];
     }
 
-    public static byte parseLenght(byte[] bytes) {
+    public static byte parseLength(byte[] bytes) {
         return bytes[CHAIN_LENGTH_OFFSET];
     }
 
@@ -140,4 +140,6 @@ public class Commands {
     public static byte parseChainPosFromInitCommand(byte[] bytes) {
         return bytes[CHAIN_POS_OFFSET];
     }
+
+    public static byte parseMiddleboxFromGetStateCommand(byte[] bytes) { return bytes[MB_OFFSET]; }
 }
