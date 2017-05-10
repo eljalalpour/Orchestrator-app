@@ -2,7 +2,6 @@ package org.Agent.app;
 
 import org.Orchestrator.app.Commands;
 import org.apache.commons.cli.*;
-import org.apache.commons.io.IOUtils;
 import org.onlab.packet.Ip4Address;
 
 import java.io.*;
@@ -11,20 +10,61 @@ import java.net.Socket;
 import java.util.ArrayList;
 
 public class Agent {
-    public static final int DEFAULT_AGENT_PORT = 2222;
-    public static final int CLICK_INS_PORT = 10001;
-    private static Socket clientSocket = null;
-    private Ip4Address ipAddr = null;
+    static final int DEFAULT_AGENT_PORT = 2222;
+    static final int CLICK_INS_PORT = 10001;
+    static Socket clientSocket = null;
+    static final String DEF_CLICK_INSTANCE_CONF =
+            "click -e 'require(package \"FTSFC\");" +
+                    "FromDevice(p0)" +
+                    "->SetVLANAnno" +
+                    "->FilterElement(%d)" +
+                    "->CheckIPHeader(14)" +
+                    "->se::FTStateElement(ID %d, VLAN_ID %d, F %d)" +
+                    "->CheckIPHeader(14)" +
+                    "->MB%d" +
+                    "->[1]se;" +
+                    "se[1]" +
+                    "->VLANEncap(VLAN_ID %d)" +
+                    "->ToDevice(p1);'";
+    static final String FIRST_CLICK_INSTANCE_CONF =
+            "click -e 'require(package \"FTSFC\");" +
+                    "FromDevice(p0)" +
+                    "->SetVLANAnno" +
+                    "->FilterElement(%d,%d)" +
+                    "->CheckIPHeader(14)" +
+                    "->se::FTStateElement(ID %d, VLAN_ID %d, F %d)" +
+                    "->CheckIPHeader(14)" +
+                    "->MB%d" +
+                    "->[1]se;" +
+                    "se[1]" +
+                    "->VLANEncap(VLAN_ID %d)" +
+                    "->ToDevice(p1);'";
+    static final String LAST_CLICK_INSTANCE_CONF =
+            "click -e 'require(package \"FTSFC\");" +
+                    "FromDevice(p0)" +
+                    "->SetVLANAnno" +
+                    "->FTFilterElement(%d)" +
+                    "->CheckIPHeader(14)" +
+                    "->se::FTStateElement(ID %d, VLAN_ID %d, F %d)" +
+                    "->CheckIPHeader(14)" +
+                    "->MB%d" +
+                    "->[1]se;" +
+                    "se[1]" +
+                    "->VLANEncap(VLAN_ID %d)" +
+                    "->FTBufferElement" +
+                    "->ToDevice(p1);" +
+                    "FTBufferElement[1]" +
+                    "->ToDevice(p2);'";
 
     public static final int CMD_OFFSET = 0;
-    public static final int MB_OFFSET = 1;
 
-    private static final String RUN_CLICK_INSTANCE = "click %s.click";
-    private static final String DEF_CLICK_INSTANCE_CONF = "click -e 'require(package \"FTSFC\");ControlSocket(TCP, %d, " +
-            "VERBOSE true);se::FTStateElement(ID %d, FAILURE_COUNT %d);'";
-    private static final String LAST_CLICK_INSTANCE_CONF = "";
-    private static final String GET_STATE_FROM_CLICK_INSTANCE = "read se.g %d";
-    private static final String PUT_STATE_TO_CLICK_INSTANCE = "write se.p";
+    Ip4Address ipAddr = null;
+    byte id;
+    short vlanId;
+    byte chainPos;
+    byte chainLength;
+    byte middlebox;
+    byte failureCount;
 
     private static boolean allSet(boolean[] arr) {
         boolean result = true;
@@ -38,13 +78,57 @@ public class Agent {
         return (byte)((chainPos - f + i + n) % n);
     }
 
+    private void setValues(byte[] bytes) {
+        chainPos = Commands.parseChainPosFromInitCommand(bytes);
+        id = chainPos;
+        vlanId = Commands.parseVlanTag(bytes);
+        middlebox = Commands.parseMiddleboxFromInitCommand(bytes);
+        failureCount = Commands.parseF(bytes);
+        chainLength = Commands.parseChainLength(bytes);
+    }
+
+    private String runClickCommand() {
+        String command;
+        if (chainPos == 0) {
+            command = String.format(FIRST_CLICK_INSTANCE_CONF,
+                    vlanId,
+                    vlanId + chainLength + 1,
+                    id,
+                    vlanId,
+                    failureCount,
+                    middlebox,
+                    vlanId + 1
+            );
+        }//if
+        else if (chainPos == (chainLength - 1)) {
+            command = String.format(LAST_CLICK_INSTANCE_CONF,
+                    vlanId,
+                    id,
+                    vlanId,
+                    failureCount,
+                    middlebox,
+                    vlanId + 1
+            );
+        }//if
+        else {
+            command = String.format(DEF_CLICK_INSTANCE_CONF,
+                    vlanId,
+                    id,
+                    vlanId,
+                    failureCount,
+                    middlebox,
+                    vlanId + 1
+            );
+        }//else
+
+        return command;
+    }
+
     public void handleInit(boolean fetchState, byte[] bytes) {
         // Run the click instance
         try {
-            byte chainPos = Commands.parseChainPosFromInitCommand(bytes);
-            byte middlebox = Commands.parseMiddleboxFromInitCommand(bytes);
-            byte f = Commands.parseF(bytes);
-            String clickRun = String.format(DEF_CLICK_INSTANCE_CONF, CLICK_INS_PORT, chainPos, f);
+            setValues(bytes);
+            String clickRun = runClickCommand();
             System.out.println(clickRun);
             Process p = Runtime.getRuntime().exec(clickRun);
             //TODO: check if the process is loaded completely
@@ -67,7 +151,7 @@ public class Agent {
 //            }//for
 
             byte f = Commands.parseF(bytes);
-            byte n = (byte)Commands.parseLength(bytes);
+            byte n = (byte)Commands.parseChainLength(bytes);
             int[] whoToAsk = new int[f + 1];
             for (byte i = 0; i < whoToAsk.length; ++i) whoToAsk[i] = whoToAsk(f, n, i, chainPos);
             whoToAsk[chainPos] = (chainPos + 1) % n;
@@ -87,13 +171,14 @@ public class Agent {
                 }//for
 
                 // Wait for the threads to finish their job
-                for (int i = 0; i < whoToAsk.length; ++i) {
+                for (byte i = 0; i < whoToAsk.length; ++i) {
                     if (successes[i]) continue;
                     try {
                         threads[i].join();
                         successes[i] = threads[i].getSuccess();
                         if (successes[i]) {
-                            putState(threads[i].getMBState());
+                            // TODO: check if the first parameter is correct
+                            putState(i, threads[i].getMBState());
                         }//if
                     }//try
                     catch(InterruptedException iExc) {
@@ -115,55 +200,65 @@ public class Agent {
     }
 
     public byte[] handleGetState(byte[] bytes) {
-        byte mb = Commands.parseMiddleboxFromGetStateCommand(bytes);
         byte[] state = null;
         try {
             Socket socket = new Socket("localhost", CLICK_INS_PORT);
+            socket.setTcpNoDelay(true);
+
             OutputStream out = socket.getOutputStream();
-            PrintWriter printWriter = new PrintWriter(out);
-            printWriter.write(String.format(GET_STATE_FROM_CLICK_INSTANCE, mb));
-            printWriter.close();
-            out.close();
+            out.write(bytes);
+            out.flush();
 
             InputStream in = socket.getInputStream();
-            state = stripClickJunk(in);
+            DataInputStream inputStream = new DataInputStream(in);
+            // First read the size of the state, then read the state
+            int size = inputStream.read();
+            System.out.printf("State size is: %d\n", size);
+
+            // Read junk
+            byte[] junk = new byte[3];
+            inputStream.read(junk);
+
+            // Read state
+            state = new byte[size];
+            inputStream.read(state, 0, size);
+
+            System.out.println("State: ");
+            for (int i = 0; i < size; i++)
+                System.out.printf("%d ", state[i]);
+
+            out.close();
             in.close();
+            socket.close();
         }//try
-        catch(IOException ioExc) { }//catch
+        catch(IOException ioExc) {
+            ioExc.printStackTrace();
+        }//catch
 
         return state;
     }
 
-    public void putState(byte[] bytes) {
+    public void putState(byte id, byte[] states, int offset, int length, int port) {
         try {
-            Socket socket = new Socket("localhost", CLICK_INS_PORT);
+            Socket socket = new Socket("localhost", port);
             OutputStream out = socket.getOutputStream();
-            PrintWriter printWriter = new PrintWriter(out);
-            printWriter.write(PUT_STATE_TO_CLICK_INSTANCE);
-            out.write(bytes);
+            DataOutputStream outputStream = new DataOutputStream(out);
+            outputStream.write(Commands.getPutCommand(id, states, offset, length));
+            outputStream.flush();
+            out.flush();
             out.close();
         }//try
-        catch(IOException ioExc) { }//catch
+        catch(IOException ioExc) {
+            ioExc.printStackTrace();
+        }//catch
     }
 
-    private byte[] stripClickJunk(InputStream in) {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-        byte[] result = null;
-        int count = 0;
-        try {
-            // Read the response from ControlSocket
-            String fristLine = reader.readLine();
-            String secondLine = reader.readLine();
+    public void putState(byte id, byte[] states, int port) {
+        putState(id, states, 0, states.length, port);
+    }
 
-            int size = Integer.valueOf(secondLine.split(" ")[1]);
-            result = new byte[size];
-            in.read(result, 0, size);
-        }//try
-        catch(IOException ioExc) {
-
-        }//catch
-
-        return result;
+    public void putState(byte id, byte[] states) {
+        putState(id, states, CLICK_INS_PORT);
     }
 
 //    public byte[] readFromClickInstance(){
@@ -182,60 +277,114 @@ public class Agent {
 //    }
 
     public static void main (String args[]) {
-        Agent agent = new Agent();
+        Ip4Address ipAddr = null;
         CommandLineParser parser = new DefaultParser();
         Options options = new Options();
-        options.addOption( "i", "ip", true, "The ip address of the host that " +
-                "this agent is running on" );
-        options.addOption( "p", "clickport", true, "The port number on which the click instance is listening");
+        options.addOption( "i", "ip", true,
+                "The ip address of the host that this agent is running on" );
+
+        options.addOption( "a", "agent", true,
+                "Run other agent");
+
+//        boolean agentB = false;
         try {
             // parse the command line arguments
             CommandLine line = parser.parse(options, args);
-            agent.ipAddr = Ip4Address.valueOf(line.getOptionValue("ip"));
+            ipAddr = Ip4Address.valueOf(line.getOptionValue("ip"));
+//            agentB = Boolean.valueOf(line.getOptionValue("agent"));
         }//try
         catch( ParseException exp ) {
             System.out.println( "Unexpected exception:" + exp.getMessage() );
         }//catch
 
-        ServerSocket serverSocket;
-        try {
-            serverSocket = new ServerSocket(DEFAULT_AGENT_PORT, 0, agent.ipAddr.toInetAddress());
-        } catch (IOException e) {
-            System.out.println(e);
-            return;
-        }//catch
-        while (true) {
+//        if (!agentB) {
+            System.out.println("Running Agent a");
+            Agent agent = new Agent();
+            agent.ipAddr = ipAddr;
+            ServerSocket serverSocket;
             try {
-                clientSocket = serverSocket.accept();
-                InputStream is = clientSocket.getInputStream();
-                byte[] bytes = IOUtils.toByteArray(is);
-
-                if (bytes.length > 0) {
-                    switch (bytes[CMD_OFFSET]) {
-                        case Commands.MB_INIT:
-                            agent.handleInit(false, bytes);
-                            break;
-
-                        case Commands.MB_INIT_AND_FETCH_STATE:
-                            agent.handleInit(true, bytes);
-                            break;
-
-                        case Commands.GET_STATE:
-                            byte[] states = agent.handleGetState(bytes);
-                            OutputStream out = clientSocket.getOutputStream();
-                            out.write(states);
-                            break;
-
-                        default:
-                            //TODO: Appropriate action when the command is not known
-                            break;
-                    }//switch
-                }//if
+                serverSocket = new ServerSocket(DEFAULT_AGENT_PORT, 0, agent.ipAddr.toInetAddress());
             }//try
-            catch(IOException ioExc) {
-                ioExc.printStackTrace();
+            catch (IOException e) {
+                System.out.println(e);
                 return;
             }//catch
-        }//while
+            while (true) {
+                try {
+                    clientSocket = serverSocket.accept();
+                    clientSocket.setTcpNoDelay(true);
+                    InputStream is = clientSocket.getInputStream();
+                    byte[] bytes = new byte[1024];
+                    is.read(bytes);
+
+                    if (bytes.length > 0) {
+                        switch (bytes[CMD_OFFSET]) {
+                            case Commands.MB_INIT:
+                                agent.handleInit(false, bytes);
+                                break;
+
+                            case Commands.MB_INIT_AND_FETCH_STATE:
+                                agent.handleInit(true, bytes);
+                                break;
+
+                            case Commands.GET_STATE:
+                                byte[] states = agent.handleGetState(bytes);
+                                OutputStream out = clientSocket.getOutputStream();
+                                out.write(states.length);
+                                out.write(states, 0, states.length);
+                                out.flush();
+                                break;
+
+                            default:
+                                //TODO: Appropriate action when the command is not known
+                                break;
+                        }//switch
+                    }//if
+                }//try
+                catch (IOException ioExc) {
+                    ioExc.printStackTrace();
+                    return;
+                }//catch
+            }//while
+//        }//if
+//        else {
+//            System.out.println("Running Agent b");
+//            Agent agent2 = new Agent();
+//            agent2.chainLength = 3;
+//            agent2.vlanId = 1;
+//            agent2.failureCount = 1;
+//            agent2.chainPos = 1;
+//            agent2.id = agent2.chainPos;
+//            agent2.middlebox = 0;
+//
+//            byte[] states;
+//            try {
+//                Socket socket = new Socket("127.0.0.1", DEFAULT_AGENT_PORT);
+//                socket.setTcpNoDelay(true);
+//                OutputStream out = socket.getOutputStream();
+//                out.write(Commands.getStateCommand((byte) 10));
+//                out.flush();
+//
+//                InputStream in = socket.getInputStream();
+//                int size = in.read();
+//
+//                states = new byte[size];
+//                size = in.read(states);
+//
+//                out.close();
+//                in.close();
+//                System.out.printf("State (%d): ", size);
+//                for (int i = 0; i < size; i++)
+//                    System.out.printf("%d ", states[i]);
+//
+//                agent2.putState((byte) 10, states, 0, size, 10002);
+//            }//try
+//            catch (SocketTimeoutException stExc) {
+//                stExc.printStackTrace();
+//            }//catch
+//            catch (IOException ioExc) {
+//                ioExc.printStackTrace();
+//            }//catch
+//        }//else
     }
 }

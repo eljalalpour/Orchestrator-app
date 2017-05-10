@@ -16,7 +16,7 @@ public class FetchStateThread extends Thread {
 
     private Ip4Address ipAddr;
     private int port;
-    private byte MBType;
+    private byte mbId;
     private byte[] MBState;
     private boolean success;
 
@@ -24,12 +24,12 @@ public class FetchStateThread extends Thread {
      * Initialize FetchStateThread
      * @param ipAddr The ip address of the agent
      * @param port The port on which the agent listens
-     * @param MBType The type of the middlebox whose state will be fetched
+     * @param mbId The type of the middlebox whose state will be fetched
      */
-    public FetchStateThread(Ip4Address ipAddr, int port, byte MBType) {
+    public FetchStateThread(Ip4Address ipAddr, int port, byte mbId) {
         this.ipAddr = ipAddr;
         this.port   = port;
-        this.MBType = MBType;
+        this.mbId = mbId;
         this.success = false;
     }
 
@@ -37,14 +37,17 @@ public class FetchStateThread extends Thread {
         try {
             Socket socket = new Socket(ipAddr.toInetAddress(), port);
             socket.setSoTimeout(SO_TIMEOUT);
+            socket.setTcpNoDelay(true);
             OutputStream out = socket.getOutputStream();
-            out.write(Commands.getStateCommand(MBType));
-            out.close();
+            out.write(Commands.getStateCommand(mbId));
+            out.flush();
 
             InputStream in = socket.getInputStream();
             int size = in.read();
             MBState = new byte[size];
             in.read(MBState);
+
+            out.close();
             in.close();
 
             success = true;
