@@ -1,8 +1,6 @@
 package org.Orchestrator.app;
 
 import org.onlab.packet.Ip4Address;
-import org.onlab.packet.IpAddress;
-
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 

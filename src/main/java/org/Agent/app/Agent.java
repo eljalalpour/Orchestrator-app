@@ -25,7 +25,7 @@ public class Agent {
                     "->[1]se;" +
                     "se[1]" +
                     "->VLANEncap(VLAN_ID %d)" +
-                    "->ToDevice(p1);'";
+                    "->ToDevice(p0);'";
     static final String FIRST_CLICK_INSTANCE_CONF =
             "click -e 'require(package \"FTSFC\");" +
                     "FromDevice(p0)" +
@@ -38,7 +38,7 @@ public class Agent {
                     "->[1]se;" +
                     "se[1]" +
                     "->VLANEncap(VLAN_ID %d)" +
-                    "->ToDevice(p1);'";
+                    "->ToDevice(p0);'";
     static final String LAST_CLICK_INSTANCE_CONF =
             "click -e 'require(package \"FTSFC\");" +
                     "FromDevice(p0)" +
@@ -52,9 +52,9 @@ public class Agent {
                     "se[1]" +
                     "->VLANEncap(VLAN_ID %d)" +
                     "->FTBufferElement" +
-                    "->ToDevice(p1);" +
+                    "->ToDevice(p0);" +
                     "FTBufferElement[1]" +
-                    "->ToDevice(p2);'";
+                    "->ToDevice(p0);'";
 
     public static final int CMD_OFFSET = 0;
 
