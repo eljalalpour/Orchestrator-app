@@ -155,6 +155,7 @@ public class Agent {
         try {
             setValues(bytes);
             ArrayList<String> commands = new ArrayList<>();
+            commands.add("sudo");
             commands.add("click");
             commands.add("-e");
             String clickRun = runClickCommand();
