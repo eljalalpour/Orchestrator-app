@@ -103,7 +103,7 @@ public class OrchestratorApp {
             Host host = availableHosts.get(index);
             log.info("Host {} is chosen for the placement of MB {}", host.id(), i);
             Ip4Address ip = host.ipAddresses().iterator().next().getIp4Address();
-            log.info("Init command is sent to IP address {}", ip.toInetAddress());
+            log.info("Init command is sent to IP address {}", privateToPublicAddresses.get(ip.toInetAddress()));
             init(Commands.MB_INIT, chain.getMB(i), privateToPublicAddresses.get(ip.toInetAddress()), i, chain.getFirstTag(), chain);
             chain.replicaMapping.add(host);
             availableHosts.remove(index);
