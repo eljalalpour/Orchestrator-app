@@ -59,7 +59,7 @@ public class Commands {
         byte ipsSize = (byte) ((Integer.SIZE / Byte.SIZE + 1) * chain.length());
         ByteBuffer buffer = (command == Commands.MB_INIT_AND_FETCH_STATE) ?
                 ByteBuffer.allocate(ipsSize + 6) :
-                ByteBuffer.allocate(5);
+                ByteBuffer.allocate(6);
 
         buffer.put(command);
         buffer.put(middleBox);
