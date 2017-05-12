@@ -39,7 +39,8 @@ public class Agent {
             "click -e 'require(package \"FTSFC\");" +
                     "FromDevice(p0)" +
                     "->SetVLANAnno" +
-                    "->FilterElement(%d)" +
+                    "->Queue" +
+                    "->FTFilterElement(%d)" +
                     "->CheckIPHeader(14)" +
                     "->se::FTStateElement(ID %d, VLAN_ID %d, F %d)" +
                     "->CheckIPHeader(14)" +
@@ -52,7 +53,8 @@ public class Agent {
             "click -e 'require(package \"FTSFC\");" +
                     "FromDevice(p0)" +
                     "->SetVLANAnno" +
-                    "->FilterElement(%d,%d)" +
+                    "->Queue" +
+                    "->FTFilterElement(%d,%d)" +
                     "->CheckIPHeader(14)" +
                     "->se::FTStateElement(ID %d, VLAN_ID %d, F %d)" +
                     "->CheckIPHeader(14)" +
@@ -65,6 +67,7 @@ public class Agent {
             "click -e 'require(package \"FTSFC\");" +
                     "FromDevice(p0)" +
                     "->SetVLANAnno" +
+                    "->Queue" +
                     "->FTFilterElement(%d)" +
                     "->CheckIPHeader(14)" +
                     "->se::FTStateElement(ID %d, VLAN_ID %d, F %d)" +
