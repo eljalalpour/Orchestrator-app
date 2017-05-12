@@ -277,29 +277,30 @@ public class Agent {
 //    }
 
     public static void main (String args[]) {
-        InetAddress ipAddr;
-
-        if (args.length < 1) {
-            System.out.println("Ip address should be given!");
-            return;
-        }//if
-
-        try {
-            ipAddr = InetAddress.getByName(args[0]);
-            System.out.println(ipAddr.getHostAddress());
-        }//try
-        catch(UnknownHostException exc) {
-            exc.printStackTrace();
-            return;
-        }//catch
+//        InetAddress ipAddr;
+//
+//        if (args.length < 1) {
+//            System.out.println("Ip address should be given!");
+//            return;
+//        }//if
+//
+//        try {
+//            ipAddr = InetAddress.getByName(args[0]);
+//            System.out.println(ipAddr.getHostAddress());
+//        }//try
+//        catch(UnknownHostException exc) {
+//            exc.printStackTrace();
+//            return;
+//        }//catch
 
 //        if (!agentB) {
 //            System.out.println("Running Agent a");
             Agent agent = new Agent();
-            agent.ipAddr = ipAddr;
+//            agent.ipAddr = ipAddr;
             ServerSocket serverSocket;
             try {
-                serverSocket = new ServerSocket(DEFAULT_AGENT_PORT, 0, agent.ipAddr);
+//                serverSocket = new ServerSocket(DEFAULT_AGENT_PORT, 0, agent.ipAddr);
+                serverSocket = new ServerSocket(DEFAULT_AGENT_PORT, 0);
             }//try
             catch (IOException e) {
                 System.out.println(e);

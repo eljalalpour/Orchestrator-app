@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import java.io.*;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.security.InvalidParameterException;
 import java.util.*;
@@ -56,6 +57,8 @@ public class OrchestratorApp {
     private ApplicationService applicationService;
 
     private HashMap <Short, ArrayList<FlowRule>> tagFlows;
+
+    private HashMap<InetAddress, InetAddress> privateToPublicAddresses;
 
 
 
@@ -101,7 +104,7 @@ public class OrchestratorApp {
             log.info("Host {} is chosen for the placement of MB {}", host.id(), i);
             Ip4Address ip = host.ipAddresses().iterator().next().getIp4Address();
             log.info("Init command is sent to IP address {}", ip.toInetAddress());
-            init(Commands.MB_INIT, chain.getMB(i), ip.toInetAddress(), i, chain.getFirstTag(), chain);
+            init(Commands.MB_INIT, chain.getMB(i), privateToPublicAddresses.get(ip.toInetAddress()), i, chain.getFirstTag(), chain);
             chain.replicaMapping.add(host);
             availableHosts.remove(index);
         }//for
@@ -338,6 +341,17 @@ public class OrchestratorApp {
 
     @Activate
     protected void activate() {
+        privateToPublicAddresses = new HashMap<>();
+        try {
+            privateToPublicAddresses.put(InetAddress.getByName("192.168.200.13"), InetAddress.getByName("10.12.4.7"));
+            privateToPublicAddresses.put(InetAddress.getByName("192.168.200.14"), InetAddress.getByName("10.12.4.7"));
+            privateToPublicAddresses.put(InetAddress.getByName("192.168.200.15"), InetAddress.getByName("10.12.4.6"));
+            privateToPublicAddresses.put(InetAddress.getByName("192.168.200.17"), InetAddress.getByName("10.12.4.6"));
+            privateToPublicAddresses.put(InetAddress.getByName("192.168.200.12"), InetAddress.getByName("10.12.4.8"));
+
+        }catch (UnknownHostException uhExc){
+            uhExc.printStackTrace();
+        }
         this.appId = applicationService.getId("org.orchestrator.app");
         availableHosts = new ArrayList<>();
         for (Iterator<Host> h = hostService.getHosts().iterator(); h.hasNext(); /*empty*/) {
