@@ -66,11 +66,10 @@ public class Commands {
         buffer.put(chainPos);
         buffer.put(chain.getF());
         buffer.put(vlanTag);
+        buffer.put((byte)chain.length());
 
         // If the command include fetch state, then the orchestrator has to provide the IP addresses of the other agents
         if (command == Commands.MB_INIT_AND_FETCH_STATE) {
-            buffer.put((byte)chain.length());
-
             for (int i = 0; i < chain.replicaMapping.size(); ++i){
                 buffer.put(chain.replicaMapping.get(i).ipAddresses().iterator().next().toOctets());
             }//for
