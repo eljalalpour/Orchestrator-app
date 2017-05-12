@@ -1,7 +1,6 @@
 package org.Agent.app;
 
 import org.Orchestrator.app.Commands;
-import org.apache.commons.cli.*;
 import org.onlab.packet.Ip4Address;
 
 import java.io.*;
@@ -277,28 +276,23 @@ public class Agent {
 //    }
 
     public static void main (String args[]) {
-        Ip4Address ipAddr = null;
-        CommandLineParser parser = new DefaultParser();
-        Options options = new Options();
-        options.addOption( "i", "ip", true,
-                "The ip address of the host that this agent is running on" );
+        Ip4Address ipAddr;
 
-        options.addOption( "a", "agent", true,
-                "Run other agent");
+        if (args.length < 1) {
+            System.out.println("Ip address should be given!");
+            return;
+        }//if
 
-//        boolean agentB = false;
         try {
-            // parse the command line arguments
-            CommandLine line = parser.parse(options, args);
-            ipAddr = Ip4Address.valueOf(line.getOptionValue("ip"));
-//            agentB = Boolean.valueOf(line.getOptionValue("agent"));
+            ipAddr = Ip4Address.valueOf(args[0]);
         }//try
-        catch( ParseException exp ) {
-            System.out.println( "Unexpected exception:" + exp.getMessage() );
+        catch(IllegalArgumentException exc) {
+            exc.printStackTrace();
+            return;
         }//catch
 
 //        if (!agentB) {
-            System.out.println("Running Agent a");
+//            System.out.println("Running Agent a");
             Agent agent = new Agent();
             agent.ipAddr = ipAddr;
             ServerSocket serverSocket;
