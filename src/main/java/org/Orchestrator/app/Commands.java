@@ -1,6 +1,7 @@
 package org.Orchestrator.app;
 
-import org.onlab.packet.Ip4Address;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
@@ -134,12 +135,19 @@ public class Commands {
         return bytes[F_OFFSET];
     }
 
-    public static ArrayList<Ip4Address> parseIpAddresses(byte[] bytes) {
-        ArrayList<Ip4Address> IpAddresses = new ArrayList<Ip4Address>();
+    public static ArrayList<InetAddress> parseIpAddresses(byte[] bytes) {
+        ArrayList<InetAddress> IpAddresses = new ArrayList<InetAddress>();
         byte ipsLen = bytes[CHAIN_LENGTH_OFFSET];
-        for (byte i = 0; i < ipsLen; ++i) {
-            IpAddresses.add(Ip4Address.valueOf(bytes, i * IP_LEN + FIRST_IP_OFFSET));
-        }//for
+        try {
+            for (byte i = 0; i < ipsLen; ++i) {
+                ByteBuffer buffer = ByteBuffer.allocate(4);
+                buffer.put(bytes, i * IP_LEN + FIRST_IP_OFFSET, 4);
+                IpAddresses.add(InetAddress.getByAddress(buffer.array()));
+            }//for
+        }//try
+        catch(UnknownHostException uhExc) {
+            uhExc.printStackTrace();
+        }//catch
         return IpAddresses;
     }
 

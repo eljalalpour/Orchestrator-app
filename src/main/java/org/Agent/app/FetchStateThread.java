@@ -1,8 +1,8 @@
 package org.Agent.app;
 
 import org.Orchestrator.app.Commands;
-import org.onlab.packet.Ip4Address;
 
+import java.net.InetAddress;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -14,7 +14,7 @@ public class FetchStateThread extends Thread {
     public static final int SO_TIMEOUT = 200;
     public static final String GET_STATE_COMMAND = "read se.g %s";
 
-    private Ip4Address ipAddr;
+    private InetAddress ipAddr;
     private int port;
     private byte mbId;
     private byte[] MBState;
@@ -26,7 +26,7 @@ public class FetchStateThread extends Thread {
      * @param port The port on which the agent listens
      * @param mbId The type of the middlebox whose state will be fetched
      */
-    public FetchStateThread(Ip4Address ipAddr, int port, byte mbId) {
+    public FetchStateThread(InetAddress ipAddr, int port, byte mbId) {
         this.ipAddr = ipAddr;
         this.port   = port;
         this.mbId = mbId;
@@ -35,7 +35,7 @@ public class FetchStateThread extends Thread {
 
     public void fetchState() {
         try {
-            Socket socket = new Socket(ipAddr.toInetAddress(), port);
+            Socket socket = new Socket(ipAddr, port);
             socket.setSoTimeout(SO_TIMEOUT);
             socket.setTcpNoDelay(true);
             OutputStream out = socket.getOutputStream();
