@@ -1,11 +1,12 @@
 package org.Agent.app;
 
 import org.Orchestrator.app.Commands;
-import org.onlab.packet.Ip4Address;
 
+import java.net.InetAddress;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 
 public class Agent {
@@ -57,7 +58,7 @@ public class Agent {
 
     public static final int CMD_OFFSET = 0;
 
-    Ip4Address ipAddr = null;
+    InetAddress ipAddr = null;
     byte id;
     short vlanId;
     byte chainPos;
@@ -140,7 +141,7 @@ public class Agent {
         if (fetchState) {
             // Find the position of this replica in the chain
 //            FaultTolerantChain chain = Commands.parseChainFromInitCommand(bytes);
-            ArrayList<Ip4Address> ip4Addresses = Commands.parseIpAddresses(bytes);
+            ArrayList<InetAddress> ip4Addresses = Commands.parseIpAddresses(bytes);
             byte chainPos = Commands.parseChainPosFromInitCommand(bytes);
 //            for (byte i = 0; i < ipAddrs.size(); ++i) {
 //                if (ipAddrs.get(i).equals(ipAddr)) {
@@ -276,7 +277,7 @@ public class Agent {
 //    }
 
     public static void main (String args[]) {
-        Ip4Address ipAddr;
+        InetAddress ipAddr;
 
         if (args.length < 1) {
             System.out.println("Ip address should be given!");
@@ -284,9 +285,10 @@ public class Agent {
         }//if
 
         try {
-            ipAddr = Ip4Address.valueOf(args[0]);
+            ipAddr = InetAddress.getByName(args[0]);
+            System.out.println(ipAddr.getHostAddress());
         }//try
-        catch(IllegalArgumentException exc) {
+        catch(UnknownHostException exc) {
             exc.printStackTrace();
             return;
         }//catch
@@ -297,7 +299,7 @@ public class Agent {
             agent.ipAddr = ipAddr;
             ServerSocket serverSocket;
             try {
-                serverSocket = new ServerSocket(DEFAULT_AGENT_PORT, 0, agent.ipAddr.toInetAddress());
+                serverSocket = new ServerSocket(DEFAULT_AGENT_PORT, 0, agent.ipAddr);
             }//try
             catch (IOException e) {
                 System.out.println(e);
