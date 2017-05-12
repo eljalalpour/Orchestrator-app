@@ -78,9 +78,10 @@ public class Agent {
                     "se[1]" +
                     "->VLANEncap(VLAN_ID %d)" +
                     "->be::FTBufferElement" +
-                    "->ToDevice(p0);" +
+                    "->pe::FTPassElement;" +
                     "be[1]" +
-                    "->ToDevice(p0);";
+                    "->[1]pe;" +
+                    "pe->ToDevice(p0)";
 
     public static final int CMD_OFFSET = 0;
 
