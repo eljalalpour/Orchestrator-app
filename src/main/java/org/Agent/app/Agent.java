@@ -316,14 +316,17 @@ public class Agent {
                     if (bytes.length > 0) {
                         switch (bytes[CMD_OFFSET]) {
                             case Commands.MB_INIT:
+                                System.out.println("Received init command");
                                 agent.handleInit(false, bytes);
                                 break;
 
                             case Commands.MB_INIT_AND_FETCH_STATE:
+                                System.out.println("Received init and fetch state command");
                                 agent.handleInit(true, bytes);
                                 break;
 
                             case Commands.GET_STATE:
+                                System.out.println("Received get command");
                                 byte[] states = agent.handleGetState(bytes);
                                 OutputStream out = clientSocket.getOutputStream();
                                 out.write(states.length);

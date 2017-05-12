@@ -100,6 +100,7 @@ public class OrchestratorApp {
             Host host = availableHosts.get(index);
             log.info("Host {} is chosen for the placement of MB {}", host.id(), i);
             Ip4Address ip = host.ipAddresses().iterator().next().getIp4Address();
+            log.info("Init command is sent to IP address {}", ip.toInetAddress());
             init(Commands.MB_INIT, chain.getMB(i), ip.toInetAddress(), i, chain.getFirstTag(), chain);
             chain.replicaMapping.add(host);
             availableHosts.remove(index);
@@ -119,6 +120,7 @@ public class OrchestratorApp {
 
     private void route(FaultTolerantChain chain){
         // We assume that an IP address is assigned to a single host
+        log.info("Routing");
         for(byte i = 0; i < chain.getChainHosts().size() - 1; ++i) {
             Host s = chain.getChainHosts().get(i);
             Host t = chain.getChainHosts().get(i + 1);
@@ -132,6 +134,7 @@ public class OrchestratorApp {
     }
 
     private void route(Host s, Host t, short tag) {
+        log.info("Routing between the source {} and the target {}", s, t);
         ArrayList<FlowRule> flowRules = new ArrayList<>();
         try {
             for (ConnectPoint cp: findPath(s, t)) {
