@@ -10,7 +10,7 @@ public class Commands {
     public static final int MB_OFFSET = 1;
     public static final int CHAIN_POS_OFFSET = 2;
     public static final int F_OFFSET = 3;
-    public static final int VLAN_TAG_OFFSET = 4;
+    public static final int FIRST_VLAN_TAG_OFFSET = 4;
     public static final int CHAIN_LENGTH_OFFSET = 5;
     public static final int FIRST_IP_OFFSET = 6;
     public static final int IP_LEN = 4;
@@ -122,8 +122,8 @@ public class Commands {
 //        return chain;
 //    }
 
-    public static byte parseVlanTag(byte[] bytes) {
-        return bytes[VLAN_TAG_OFFSET];
+    public static byte parseFirstVlanTag(byte[] bytes) {
+        return bytes[FIRST_VLAN_TAG_OFFSET];
     }
 
     public static byte parseChainLength(byte[] bytes) {

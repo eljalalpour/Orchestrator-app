@@ -6,9 +6,7 @@ import java.net.InetAddress;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.List;
 
 class StreamGobbler extends Thread {
     InputStream is;
@@ -87,7 +85,7 @@ public class Agent {
 
     InetAddress ipAddr = null;
     byte id;
-    short vlanId;
+    short firstVlanId;
     byte chainPos;
     byte chainLength;
     byte middlebox;
@@ -108,7 +106,7 @@ public class Agent {
     private void setValues(byte[] bytes) {
         chainPos = Commands.parseChainPosFromInitCommand(bytes);
         id = chainPos;
-        vlanId = Commands.parseVlanTag(bytes);
+        firstVlanId = Commands.parseFirstVlanTag(bytes);
         middlebox = Commands.parseMiddleboxFromInitCommand(bytes);
         failureCount = Commands.parseF(bytes);
         chainLength = Commands.parseChainLength(bytes);
@@ -118,39 +116,39 @@ public class Agent {
         String command;
         if (chainPos == 0) {
             System.out.println("At the beginning of the chain");
-            System.out.printf("vlanId: %d, chain-length: %d", vlanId, chainLength);
+            System.out.printf("firstVlanId: %d, chain-length: %d", firstVlanId, chainLength);
             command = String.format(FIRST_CLICK_INSTANCE_CONF,
-                    vlanId,
-                    vlanId + chainLength + 1,
+                    firstVlanId + chainPos,
+                    firstVlanId + chainLength + 1,
                     id,
-                    vlanId,
+                    firstVlanId + chainPos,
                     failureCount,
                     middlebox,
-                    vlanId + 1
+                    firstVlanId + chainPos + 1
             );
         }//if
         else if (chainPos == (chainLength - 1)) {
             System.out.println("At the end of the chain");
-            System.out.printf("vlanId: %d, chain-length: %d", vlanId, chainLength);
+            System.out.printf("firstVlanId: %d, chain-length: %d", firstVlanId, chainLength);
             command = String.format(LAST_CLICK_INSTANCE_CONF,
-                    vlanId,
+                    firstVlanId + chainPos,
                     id,
-                    vlanId,
+                    firstVlanId + chainPos,
                     failureCount,
                     middlebox,
-                    vlanId + 1
+                    firstVlanId + chainPos + 1
             );
         }//if
         else {
             System.out.println("At the middle of the chain");
-            System.out.printf("vlanId: %d, chain-length: %d", vlanId, chainLength);
+            System.out.printf("firstVlanId: %d, chain-length: %d", firstVlanId, chainLength);
             command = String.format(DEF_CLICK_INSTANCE_CONF,
-                    vlanId,
+                    firstVlanId + chainPos,
                     id,
-                    vlanId,
+                    firstVlanId + chainPos,
                     failureCount,
                     middlebox,
-                    vlanId + 1
+                    firstVlanId + chainPos + 1
             );
         }//else
 
@@ -440,7 +438,7 @@ public class Agent {
 //            System.out.println("Running Agent b");
 //            Agent agent2 = new Agent();
 //            agent2.chainLength = 3;
-//            agent2.vlanId = 1;
+//            agent2.firstVlanId = 1;
 //            agent2.failureCount = 1;
 //            agent2.chainPos = 1;
 //            agent2.id = agent2.chainPos;
