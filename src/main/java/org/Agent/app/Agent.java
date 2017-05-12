@@ -9,6 +9,28 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 
+class StreamGobbler extends Thread {
+    InputStream is;
+
+    // reads everything from is until empty.
+    StreamGobbler(InputStream is) {
+        this.is = is;
+    }
+
+    public void run() {
+        try {
+            InputStreamReader isr = new InputStreamReader(is);
+            BufferedReader br = new BufferedReader(isr);
+            String line = null;
+            while ( (line = br.readLine()) != null)
+                System.out.println(line);
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+        }
+    }
+}
+
+
 public class Agent {
     static final int DEFAULT_AGENT_PORT = 2222;
     static final int CLICK_INS_PORT = 10001;
@@ -131,6 +153,11 @@ public class Agent {
             String clickRun = runClickCommand();
             System.out.println(clickRun);
             Process p = Runtime.getRuntime().exec(clickRun);
+            StreamGobbler errorGobbler = new StreamGobbler(p.getErrorStream());
+            StreamGobbler outputGobbler = new StreamGobbler(p.getInputStream());
+            errorGobbler.start();
+            outputGobbler.start();
+
             //TODO: check if the process is loaded completely
         }//try
         catch (IOException ioExc) {
