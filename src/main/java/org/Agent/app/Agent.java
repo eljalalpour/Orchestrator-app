@@ -8,6 +8,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.List;
 
 class StreamGobbler extends Thread {
     InputStream is;
@@ -36,7 +37,7 @@ public class Agent {
     static final int CLICK_INS_PORT = 10001;
     static Socket clientSocket = null;
     static final String DEF_CLICK_INSTANCE_CONF =
-            "sudo click -e 'require(package \"FTSFC\");" +
+            "require(package \"FTSFC\");" +
                     "FromDevice(p0)" +
                     "->SetVLANAnno" +
                     "->Queue" +
@@ -48,9 +49,9 @@ public class Agent {
                     "->[1]se;" +
                     "se[1]" +
                     "->VLANEncap(VLAN_ID %d)" +
-                    "->ToDevice(p0);'";
+                    "->ToDevice(p0);";
     static final String FIRST_CLICK_INSTANCE_CONF =
-            "sudo click -e 'require(package \"FTSFC\");" +
+            "require(package \"FTSFC\");" +
                     "FromDevice(p0)" +
                     "->SetVLANAnno" +
                     "->Queue" +
@@ -62,9 +63,9 @@ public class Agent {
                     "->[1]se;" +
                     "se[1]" +
                     "->VLANEncap(VLAN_ID %d)" +
-                    "->ToDevice(p0);'";
+                    "->ToDevice(p0);";
     static final String LAST_CLICK_INSTANCE_CONF =
-            "sudo click -e 'require(package \"FTSFC\");" +
+            "require(package \"FTSFC\");" +
                     "FromDevice(p0)" +
                     "->SetVLANAnno" +
                     "->Queue" +
@@ -79,7 +80,7 @@ public class Agent {
                     "->FTBufferElement" +
                     "->ToDevice(p0);" +
                     "FTBufferElement[1]" +
-                    "->ToDevice(p0);'";
+                    "->ToDevice(p0);";
 
     public static final int CMD_OFFSET = 0;
 
@@ -153,9 +154,14 @@ public class Agent {
         // Run the click instance
         try {
             setValues(bytes);
+            ArrayList<String> commands = new ArrayList<>();
+            commands.add("click");
+            commands.add("-e");
             String clickRun = runClickCommand();
+            commands.add(clickRun);
+            ProcessBuilder processBuilder = new ProcessBuilder(commands);
             System.out.println(clickRun);
-            Process p = Runtime.getRuntime().exec(clickRun);
+            Process p = processBuilder.start();
             StreamGobbler errorGobbler = new StreamGobbler(p.getErrorStream());
             StreamGobbler outputGobbler = new StreamGobbler(p.getInputStream());
             errorGobbler.start();
@@ -376,6 +382,51 @@ public class Agent {
                     return;
                 }//catch
             }//while
+
+        // Run the click instance
+//        try {
+//            String clickRun =
+////                    "click -e " +
+////                    "'" +
+//                    "require(package FTSFC);" +
+//                    "FromDevice(en0)" +
+//                    "->SetVLANAnno" +
+//                    "->Queue" +
+//                    "->FTFilterElement(2,4)" +
+//                    "->CheckIPHeader(14)" +
+//                    "->se::FTStateElement(ID 1, VLAN_ID 1, F 1)" +
+//                    "->CheckIPHeader(14)" +
+//                    "->MB0::CounterMB" +
+//                    "->[1]se;" +
+//                    "se[1]" +
+//                    "->VLANEncap(VLAN_ID 10)" +
+//                    "->ToDevice(en0);" +
+////                    "'"
+//                    ""
+//                    ;
+
+//            System.out.println(clickRun);
+//            List<String> commands = new ArrayList<String>();
+//            commands.add("click");
+//            commands.add("-e");
+//            commands.add(clickRun);
+//            ProcessBuilder pb = new ProcessBuilder(commands);
+//            Process p = pb.start();
+//
+////            Process p = Runtime.getRuntime().exec(clickRun);
+//            StreamGobbler errorGobbler = new StreamGobbler(p.getErrorStream());
+//            StreamGobbler outputGobbler = new StreamGobbler(p.getInputStream());
+//            errorGobbler.start();
+//            outputGobbler.start();
+//            p.waitFor();
+//            //TODO: check if the process is loaded completely
+//        }//try
+//        catch (IOException ioExc) {
+//            ioExc.printStackTrace();
+//        }//catch
+//        catch( InterruptedException iExc) {
+//            iExc.printStackTrace();
+//        }//catch
 //        }//if
 //        else {
 //            System.out.println("Running Agent b");
