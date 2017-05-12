@@ -36,7 +36,7 @@ public class Agent {
     static final int CLICK_INS_PORT = 10001;
     static Socket clientSocket = null;
     static final String DEF_CLICK_INSTANCE_CONF =
-            "click -e 'require(package \"FTSFC\");" +
+            "sudo click -e 'require(package \"FTSFC\");" +
                     "FromDevice(p0)" +
                     "->SetVLANAnno" +
                     "->Queue" +
@@ -50,7 +50,7 @@ public class Agent {
                     "->VLANEncap(VLAN_ID %d)" +
                     "->ToDevice(p0);'";
     static final String FIRST_CLICK_INSTANCE_CONF =
-            "click -e 'require(package \"FTSFC\");" +
+            "sudo click -e 'require(package \"FTSFC\");" +
                     "FromDevice(p0)" +
                     "->SetVLANAnno" +
                     "->Queue" +
@@ -64,7 +64,7 @@ public class Agent {
                     "->VLANEncap(VLAN_ID %d)" +
                     "->ToDevice(p0);'";
     static final String LAST_CLICK_INSTANCE_CONF =
-            "click -e 'require(package \"FTSFC\");" +
+            "sudo click -e 'require(package \"FTSFC\");" +
                     "FromDevice(p0)" +
                     "->SetVLANAnno" +
                     "->Queue" +
