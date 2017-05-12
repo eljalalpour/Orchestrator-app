@@ -89,25 +89,26 @@ public class OrchestratorApp {
      * @param chain to be deployed
      */
     private void place(FaultTolerantChain chain) throws Exception {
-//        //TODO: if we can deploy at source and destination, then we should check only the availableHosts.size()
-//        //if (chain.length() > availableHosts.size()) {
-//        if (chain.length() > availableHosts.size() - 2) {
-//            throw new Exception("not enough available hosts");
-//        }//if
-//
-//        for (byte i = 0; i < chain.length(); ++i) {
-//            int index = findAvailableHost(chain);
-//            Host host = availableHosts.get(index);
-//            log.info("Host {} is chosen for the placement of MB {}", host.id(), i);
-////            Ip4Address ip = host.ipAddresses().iterator().next().getIp4Address();
-////            init(Commands.MB_INIT, chain.getMB(i), ip.toInetAddress(), i, chain.getFirstTag(), chain);
-//            chain.replicaMapping.add(host);
-//            availableHosts.remove(index);
-//        }//for
-//        placedChains.add(chain);
-        Ip4Address ip = Ip4Address.valueOf("127.0.0.1");
-        init(Commands.MB_INIT, chain.getMB(0), ip.toInetAddress(), (byte)0, chain.getFirstTag(), chain);
+        //TODO: if we can deploy at source and destination, then we should check only the availableHosts.size()
+        //if (chain.length() > availableHosts.size()) {
+        if (chain.length() > availableHosts.size() - 2) {
+            throw new Exception("not enough available hosts");
+        }//if
+
+        for (byte i = 0; i < chain.length(); ++i) {
+            int index = findAvailableHost(chain);
+            Host host = availableHosts.get(index);
+            log.info("Host {} is chosen for the placement of MB {}", host.id(), i);
+            Ip4Address ip = host.ipAddresses().iterator().next().getIp4Address();
+            init(Commands.MB_INIT, chain.getMB(i), ip.toInetAddress(), i, chain.getFirstTag(), chain);
+            chain.replicaMapping.add(host);
+            availableHosts.remove(index);
+        }//for
         placedChains.add(chain);
+
+//        Ip4Address ip = Ip4Address.valueOf("127.0.0.1");
+//        init(Commands.MB_INIT, chain.getMB(0), ip.toInetAddress(), (byte)0, chain.getFirstTag(), chain);
+//        placedChains.add(chain);
 //        chain.replicaMapping.add(ip);
 //
 //        Ip4Address ip2 = Ip4Address.valueOf("10.20.159.142");
@@ -237,46 +238,46 @@ public class OrchestratorApp {
     }
 
     private void deployChain(String srcChainDst, byte f) {
-//        try {
-//            FaultTolerantChain chain = parse(srcChainDst, f);
-//            chain.setFirstTag(tag);
-//            place(chain);
-////            route(chain);
-//            tag += (short)chain.length() + 2;
-//        }//try
-//        catch (IOException ioExc) {
-//
-//        }//catch
-//        catch (Exception exc){
-//
-//        }//catch
-
         try {
-
-            Ip4Address ip = Ip4Address.valueOf("127.0.0.1");
-            byte ipsSize = 1;
-            ByteBuffer buffer = ByteBuffer.allocate(5);
-
-            buffer.put((byte) 0);
-            buffer.put((byte) 0);
-            buffer.put((byte) 0);
-            buffer.put((byte) 0);
-            buffer.put((byte) 1);
-
-            Socket replicaSocket = new Socket(Ip4Address.valueOf("127.0.0.1").toInetAddress(), AGENT_PORT);
-            OutputStream out = replicaSocket.getOutputStream();
-            out.write(buffer.array());
-            out.close();
-        }//tru
-        catch(IOException ioExc) {
+            FaultTolerantChain chain = parse(srcChainDst, f);
+            chain.setFirstTag(tag);
+            place(chain);
+            route(chain);
+            tag += (short)chain.length() + 2;
+        }//try
+        catch (IOException ioExc) {
             ioExc.printStackTrace();
         }//catch
+        catch (Exception exc){
+            exc.printStackTrace();
+        }//catch
+
+//        try {
+//
+//            Ip4Address ip = Ip4Address.valueOf("127.0.0.1");
+//            byte ipsSize = 1;
+//            ByteBuffer buffer = ByteBuffer.allocate(5);
+//
+//            buffer.put((byte) 0);
+//            buffer.put((byte) 0);
+//            buffer.put((byte) 0);
+//            buffer.put((byte) 0);
+//            buffer.put((byte) 1);
+//
+//            Socket replicaSocket = new Socket(Ip4Address.valueOf("127.0.0.1").toInetAddress(), AGENT_PORT);
+//            OutputStream out = replicaSocket.getOutputStream();
+//            out.write(buffer.array());
+//            out.close();
+//        }//tru
+//        catch(IOException ioExc) {
+//            ioExc.printStackTrace();
+//        }//catch
     }
 
     private void recover(HostEvent hostEvent) {
         // TODO: find the failed host if any, and remove it from replica mapping, replace with new host
         boolean found = false;
-//        try {
+        try {
 //            HostId hostId = (HostId) deviceEvent.port().element().id();
             HostId hostId = hostEvent.subject().id();
             log.info("Host {} is down", hostId);
@@ -294,8 +295,8 @@ public class OrchestratorApp {
                         int index = findAvailableHost(ch);
                         Host availableHost = availableHosts.get(index);
                         log.info("Host {} is chosen for recovery", availableHost.id());
-//                        init(Commands.MB_INIT_AND_FETCH_STATE, ch.getMB(j),
-//                                availableHost.ipAddresses().iterator().next().toInetAddress(), j, ch.getFirstTag(), ch);
+                        init(Commands.MB_INIT_AND_FETCH_STATE, ch.getMB(j),
+                                availableHost.ipAddresses().iterator().next().toInetAddress(), j, ch.getFirstTag(), ch);
                         availableHosts.remove(index);
 
                         ch.replicaMapping.remove(j);
@@ -308,11 +309,11 @@ public class OrchestratorApp {
                 }//for
                 if (found) break;
             }//for
-//        }//try
-//        catch(IOException ioExc) {
-//
-//        }//catch
-//        log.info("At the end of recovery!");
+        }//try
+        catch(IOException ioExc) {
+            ioExc.printStackTrace();
+        }//catch
+        log.info("At the end of recovery!");
     }
 
     public FaultTolerantChain parse(String srcChainDst, byte f) throws InvalidParameterException {
@@ -333,8 +334,7 @@ public class OrchestratorApp {
     }
 
     @Activate
-    protected void activate()
-    {
+    protected void activate() {
         this.appId = applicationService.getId("org.orchestrator.app");
         availableHosts = new ArrayList<>();
         for (Iterator<Host> h = hostService.getHosts().iterator(); h.hasNext(); /*empty*/) {
@@ -349,7 +349,7 @@ public class OrchestratorApp {
 //        deviceService.addListener(deviceListener);
         hostService.addListener(hostListener);
 
-        deployChain("192.168.200.12,0,1,192.168.200.15", (byte)1);
+        deployChain("192.168.200.14,0,1,192.168.200.17", (byte)1);
     }
 
     @Deactivate
@@ -381,8 +381,8 @@ public class OrchestratorApp {
         }
     }
 
-    public static void main(String[] args) {
-        OrchestratorApp orch = new OrchestratorApp();
-        orch.deployChain("127.0.0.1,0,127.0.0.1", (byte)0);
-    }
+//    public static void main(String[] args) {
+//        OrchestratorApp orch = new OrchestratorApp();
+//        orch.deployChain("127.0.0.1,0,127.0.0.1", (byte)0);
+//    }
 }
