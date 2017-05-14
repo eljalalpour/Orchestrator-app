@@ -282,6 +282,7 @@ public class OrchestratorApp {
 
     private void recover(HostEvent hostEvent) {
         // TODO: find the failed host if any, and remove it from replica mapping, replace with new host
+        log.info("Recovering...");
         boolean found = false;
         try {
 //            HostId hostId = (HostId) deviceEvent.port().element().id();
