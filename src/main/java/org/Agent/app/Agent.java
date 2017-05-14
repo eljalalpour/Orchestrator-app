@@ -37,43 +37,46 @@ public class Agent {
     static final String DEF_CLICK_INSTANCE_CONF =
             "require(package \"FTSFC\");" +
                     "FromDevice(p0)" +
-                    "->SetVLANAnno" +
-                    "->Queue" +
-                    "->FTFilterElement(%d)" +
+//                    "->SetVLANAnno" +
+//                    "->Queue" +
+//                    "->FTFilterElement(%d)" +
                     "->CheckIPHeader(14)" +
                     "->se::FTStateElement(ID %d, VLAN_ID %d, F %d)" +
                     "->CheckIPHeader(14)" +
                     "->MB%d::CounterMB" +
                     "->[1]se;" +
                     "se[1]" +
+                    "->SetVLANAnno" +
                     "->VLANEncap(VLAN_ID %d)" +
                     "->ToDevice(p0);";
     static final String FIRST_CLICK_INSTANCE_CONF =
             "require(package \"FTSFC\");" +
                     "FromDevice(p0)" +
-                    "->SetVLANAnno" +
-                    "->Queue" +
-                    "->FTFilterElement(%d,%d)" +
+//                    "->SetVLANAnno" +
+//                    "->Queue" +
+//                    "->FTFilterElement(%d,%d)" +
                     "->CheckIPHeader(14)" +
                     "->se::FTStateElement(ID %d, VLAN_ID %d, F %d)" +
                     "->CheckIPHeader(14)" +
                     "->MB%d::CounterMB" +
                     "->[1]se;" +
                     "se[1]" +
+                    "->SetVLANAnno" +
                     "->VLANEncap(VLAN_ID %d)" +
                     "->ToDevice(p0);";
     static final String LAST_CLICK_INSTANCE_CONF =
             "require(package \"FTSFC\");" +
                     "FromDevice(p0)" +
-                    "->SetVLANAnno" +
-                    "->Queue" +
-                    "->FTFilterElement(%d)" +
+//                    "->SetVLANAnno" +
+//                    "->Queue" +
+//                    "->FTFilterElement(%d)" +
                     "->CheckIPHeader(14)" +
                     "->se::FTStateElement(ID %d, VLAN_ID %d, F %d)" +
                     "->CheckIPHeader(14)" +
                     "->MB%d::CounterMB" +
                     "->[1]se;" +
                     "se[1]" +
+                    "->SetVLANAnno" +
                     "->VLANEncap(VLAN_ID %d)" +
                     "->be::FTBufferElement" +
                     "->pe::FTPassElement;" +
@@ -118,8 +121,8 @@ public class Agent {
             System.out.println("At the beginning of the chain");
             System.out.printf("firstVlanId: %d, chain-length: %d", firstVlanId, chainLength);
             command = String.format(FIRST_CLICK_INSTANCE_CONF,
-                    firstVlanId + chainPos,
-                    firstVlanId + chainLength + 1,
+//                    firstVlanId + chainPos,
+//                    firstVlanId + chainLength + 1,
                     id,
                     firstVlanId + chainPos,
                     failureCount,
@@ -131,7 +134,7 @@ public class Agent {
             System.out.println("At the end of the chain");
             System.out.printf("firstVlanId: %d, chain-length: %d", firstVlanId, chainLength);
             command = String.format(LAST_CLICK_INSTANCE_CONF,
-                    firstVlanId + chainPos,
+//                    firstVlanId + chainPos,
                     id,
                     firstVlanId + chainPos,
                     failureCount,
@@ -143,7 +146,7 @@ public class Agent {
             System.out.println("At the middle of the chain");
             System.out.printf("firstVlanId: %d, chain-length: %d", firstVlanId, chainLength);
             command = String.format(DEF_CLICK_INSTANCE_CONF,
-                    firstVlanId + chainPos,
+//                    firstVlanId + chainPos,
                     id,
                     firstVlanId + chainPos,
                     failureCount,
