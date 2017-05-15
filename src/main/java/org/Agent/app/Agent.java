@@ -253,7 +253,7 @@ public class Agent {
     public byte[] handleGetState(byte[] bytes) {
         byte[] state = null;
         try {
-            Socket socket = new Socket("localhost\n", CLICK_INS_PORT);
+            Socket socket = new Socket("localhost", CLICK_INS_PORT);
             socket.setTcpNoDelay(true);
 
             OutputStream out = socket.getOutputStream();
