@@ -2,27 +2,26 @@ package org.Orchestrator.app;
 
 import org.apache.felix.scr.annotations.*;
 import org.onlab.packet.Ip4Address;
-import org.onlab.packet.IpAddress;
 import org.onlab.packet.VlanId;
 import org.onosproject.app.ApplicationService;
 import org.onosproject.core.ApplicationId;
 import org.onosproject.net.*;
+import org.onosproject.net.device.DeviceEvent;
+import org.onosproject.net.device.DeviceListener;
 import org.onosproject.net.device.DeviceService;
 import org.onosproject.net.flow.*;
-import org.onosproject.net.host.HostEvent;
-import org.onosproject.net.host.HostListener;
-import org.onosproject.net.host.HostService;
+import org.onosproject.net.host.*;
 import org.onosproject.net.topology.TopologyService;
+import org.onosproject.ovsdb.controller.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.net.InetAddress;
-import java.net.Socket;
-import java.net.UnknownHostException;
-import java.nio.ByteBuffer;
+import java.net.*;
 import java.security.InvalidParameterException;
 import java.util.*;
+
+import static org.onlab.util.Tools.toHex;
 
 
 @Component(immediate = true)
@@ -33,9 +32,12 @@ public class OrchestratorApp {
     public static final String DELIM = ",";
     private static final int MIN_SRC_CHAIN_DST_LEN = 3;
 
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
     private ApplicationId appId;
 
     private ArrayList<Host> availableHosts;
+    private HashMap<Port, Host> port2HostMap;
     private ArrayList<FaultTolerantChain> placedChains = new ArrayList<>();
 
     @Reference(cardinality = ReferenceCardinality.MANDATORY_UNARY)
@@ -43,9 +45,6 @@ public class OrchestratorApp {
 
     @Reference(cardinality = ReferenceCardinality.MANDATORY_UNARY)
     private HostService hostService;
-
-    private HostListener hostListener = new InnerDeviceListener();
-    private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Reference(cardinality = ReferenceCardinality.MANDATORY_UNARY)
     private TopologyService topologyService;
@@ -56,11 +55,18 @@ public class OrchestratorApp {
     @Reference(cardinality = ReferenceCardinality.MANDATORY_UNARY)
     private ApplicationService applicationService;
 
+    @Reference(cardinality = ReferenceCardinality.MANDATORY_UNARY)
+    protected OvsdbController controller;
+
     private HashMap <Short, ArrayList<FlowRule>> tagFlows;
 
     private HashMap<InetAddress, InetAddress> privateToPublicAddresses;
 
+    private HostListener hostListener = new InnerHostListener();
 
+    private DeviceListener deviceListener = new InnerDeviceistener();
+
+    private OvsdbEventListener ovsdbListener = new InnerOvsdbEventListener();
 
     /**
      * The orchestrator sends a MB_INIT message to the replica.
@@ -101,9 +107,9 @@ public class OrchestratorApp {
         for (byte i = 0; i < chain.length(); ++i) {
             int index = findAvailableHost(chain);
             Host host = availableHosts.get(index);
-            log.info("Host {} is chosen for the placement of MB {}", host.id(), i);
+            System.out.printf("Host %s is chosen for the placement of MB %s", host.id(), i);
             Ip4Address ip = host.ipAddresses().iterator().next().getIp4Address();
-            log.info("Init command is sent to IP address {}", privateToPublicAddresses.get(ip.toInetAddress()));
+            System.out.printf("Init command is sent to IP address %s", privateToPublicAddresses.get(ip.toInetAddress()));
             init(Commands.MB_INIT, chain.getMB(i), privateToPublicAddresses.get(ip.toInetAddress()), i, chain.getFirstTag(), chain);
             chain.replicaMapping.add(host);
             availableHosts.remove(index);
@@ -123,7 +129,7 @@ public class OrchestratorApp {
 
     private void route(FaultTolerantChain chain){
         // We assume that an IP address is assigned to a single host
-        log.info("Routing");
+        System.out.printf("Routing");
         for(byte i = 0; i < chain.getChainHosts().size() - 1; ++i) {
             Host s = chain.getChainHosts().get(i);
             Host t = chain.getChainHosts().get(i + 1);
@@ -137,7 +143,7 @@ public class OrchestratorApp {
     }
 
     private void route(Host s, Host t, short tag) {
-        log.info("Routing between the source {} and the target {}", s, t);
+        System.out.printf("Routing between the source %s and the target %s", s, t);
         ArrayList<FlowRule> flowRules = new ArrayList<>();
         try {
             for (ConnectPoint cp: findPath(s, t)) {
@@ -146,7 +152,7 @@ public class OrchestratorApp {
                 flowRules.add(flowRule);
             }//for
             tagFlows.put(tag, flowRules);
-            log.info("adding tag {}", tag);
+            System.out.printf("adding tag %s", tag);
         }//try
         catch(NoSuchElementException nseExc) {
             nseExc.printStackTrace();
@@ -214,12 +220,12 @@ public class OrchestratorApp {
         Host u = chain.getChainHosts().get(
                 (failedIndex + 2) % (chain.length() + 2)); // +2 is for the source and the item after the failed one
 
-        log.info("removing tags {}",
+        System.out.printf("removing tags %s",
                 (short)(chain.getFirstTag() + failedIndex));
 
         removeRules((short)(chain.getFirstTag() + failedIndex));
 
-        log.info("removing tags {}",
+        System.out.printf("removing tags %s",
                 (short)(chain.getFirstTag() + failedIndex + 1));
         removeRules((short)(chain.getFirstTag() + failedIndex + 1));
 
@@ -228,13 +234,13 @@ public class OrchestratorApp {
 
         if (failedIndex == 0 || failedIndex == chain.length() - 1) {
             short tag = (short)(chain.getFirstTag() + chain.length() + 1);
-            log.info("removing tag {}", tag);
+            System.out.printf("removing tag %s", tag);
             removeRules(tag);
             route(chain.getChainHosts().get(chain.getChainHosts().size() - 2),
                   chain.getChainHosts().get(1),
                   tag);
         }//if
-        log.info("At the end of reroute!");
+        System.out.printf("At the end of reroute!");
     }
 
     private void removeRules(short tag) {
@@ -282,28 +288,29 @@ public class OrchestratorApp {
 
     private void recover(HostEvent hostEvent) {
         // TODO: find the failed host if any, and remove it from replica mapping, replace with new host
-        log.info("Recovering...");
+        System.out.printf("Recovering...");
         boolean found = false;
         try {
 //            HostId hostId = (HostId) deviceEvent.port().element().id();
             HostId hostId = hostEvent.subject().id();
-            log.info("Host {} is down", hostId);
-            log.info("Searching for the failed chain");
+            System.out.printf("Host %s is down", hostId);
+            System.out.printf("Searching for the failed chain");
             for(FaultTolerantChain ch : placedChains) {
-                log.info("Searching for the failed host in chain");
-                log.info("Replica mapping size: {}", ch.replicaMapping.size());
+                System.out.printf("Searching for the failed host in chain");
+                System.out.printf("Replica mapping size: %s", ch.replicaMapping.size());
                 byte j = 0;
                 for(Host host : ch.replicaMapping) {
-                    log.info("Check host {}", host.id());
+                    System.out.printf("Check host %s", host.id());
 
                     if(host.id().equals(hostId)) {
-                        log.info("The failed host is found!");
+                        System.out.printf("The failed host is found!");
 
                         int index = findAvailableHost(ch);
                         Host availableHost = availableHosts.get(index);
-                        log.info("Host {} is chosen for recovery", availableHost.id());
+                        System.out.printf("Host %s is chosen for recovery", availableHost.id());
                         init(Commands.MB_INIT_AND_FETCH_STATE, ch.getMB(j),
-                                availableHost.ipAddresses().iterator().next().toInetAddress(), j, ch.getFirstTag(), ch);
+                                privateToPublicAddresses.get(availableHost.ipAddresses().iterator().next().toInetAddress())
+                                , j, ch.getFirstTag(), ch);
                         availableHosts.remove(index);
 
                         ch.replicaMapping.remove(j);
@@ -320,7 +327,7 @@ public class OrchestratorApp {
         catch(IOException ioExc) {
             ioExc.printStackTrace();
         }//catch
-        log.info("At the end of recovery!");
+        System.out.printf("At the end of recovery!");
     }
 
     public FaultTolerantChain parse(String srcChainDst, byte f) throws InvalidParameterException {
@@ -355,17 +362,25 @@ public class OrchestratorApp {
         }
         this.appId = applicationService.getId("org.orchestrator.app");
         availableHosts = new ArrayList<>();
+        port2HostMap = new HashMap<>();
         for (Iterator<Host> h = hostService.getHosts().iterator(); h.hasNext(); /*empty*/) {
             Host host = h.next();
-            log.info("Host {} is available!", host);
+            System.out.printf("Host %s is available!", host);
             availableHosts.add(host);
+
         }//for
 
         tagFlows = new HashMap<>();
 
         // Listen for failures
-//        deviceService.addListener(deviceListener);
         hostService.addListener(hostListener);
+        System.out.printf("host listener added!");
+
+        deviceService.addListener(deviceListener);
+        System.out.printf("device listener added!");
+
+        controller.addOvsdbEventListener(ovsdbListener);
+        System.out.printf("Ovsdb listener added!");
 
         deployChain("192.168.200.14,0,1,192.168.200.17", (byte)1);
     }
@@ -373,23 +388,30 @@ public class OrchestratorApp {
     @Deactivate
     protected void deactivate()
     {
-        log.info("Stopped");
+        System.out.printf("Stopped");
         flowRuleService.removeFlowRulesById(appId);
     }
 
     /**
      * Inner Device Event Listener class.
      */
-    private class InnerDeviceListener implements HostListener {
+    private class InnerHostListener implements HostListener {
         @Override
         public void event(HostEvent event) {
+            System.out.printf("In host event handler!");
+            log.debug("In host event handler!");
+            log.error("In host event handler!");
+            log.warn("In host event handler!");
+            System.out.println("In host event handler!");
             switch (event.type()) {
                 case HOST_ADDED:
-                    log.info("Host {} is added!", event.subject());
+                    System.out.printf("Host %s is added!", event.subject());
+                    System.out.printf("Host %s is added!\n", event.subject());
                     break;
 
                 case HOST_REMOVED:
-                    log.info("Host {} is removed!",event.subject());
+                    System.out.printf("Host %s is removed!", event.subject());
+                    System.out.printf("Host %s is removed!\n", event.subject());
                     recover(event);
                     break;
 
@@ -398,6 +420,94 @@ public class OrchestratorApp {
             }//switch
         }
     }
+
+    private class InnerDeviceistener implements DeviceListener {
+        @Override
+        public void event(DeviceEvent event) {
+            System.out.printf("In device event handler!");
+            log.debug("In device event handler!");
+            log.error("In device event handler!");
+            log.warn("In device event handler!");
+            System.out.println("In device event handler!");
+            switch (event.type()) {
+                case PORT_ADDED:
+                    System.out.printf("Port %s is added!", event.subject());
+                    System.out.printf("Port %s is added!\n", event.subject());
+                    break;
+
+                case PORT_REMOVED:
+                    System.out.printf("Port %s is removed!", event.subject());
+                    System.out.printf("Port %s is removed!\n", event.subject());
+                    break;
+
+                default:
+                    break;
+            }//switch
+        }
+
+    }
+
+    private class InnerOvsdbEventListener implements OvsdbEventListener {
+
+        @Override
+        public void handle(OvsdbEvent<EventSubject> event) {
+            System.out.printf("In Ovsdb event handler!");
+            log.debug("In Ovsdb event handler!");
+            log.error("In Ovsdb event handler!");
+            log.warn("In Ovsdb event handler!");
+            System.out.println("In Ovsdb event handler!");
+
+            OvsdbEventSubject subject = null;
+            if (event.subject() instanceof OvsdbEventSubject) {
+                subject = (OvsdbEventSubject) event.subject();
+            }
+
+            // If ifaceid is null,it indicates this is not a vm port.
+            if (subject.ifaceid() == null) {
+                return;
+            }
+            switch (event.type()) {
+                case PORT_ADDED:
+                    System.out.printf("Port added is detected in ovsdb listener!");
+                    HostId hostId = HostId.hostId(subject.hwAddress(), VlanId.vlanId());
+                    DeviceId deviceId = DeviceId.deviceId(uri(subject.dpid().value()));
+                    PortNumber portNumber = PortNumber.portNumber(subject
+                            .portNumber().value(), subject.portName().value());
+                    HostLocation loaction = new HostLocation(deviceId, portNumber,
+                            0L);
+                    SparseAnnotations annotations = DefaultAnnotations.builder()
+                            .set("ifaceid", subject.ifaceid().value()).build();
+                    HostDescription hostDescription = new DefaultHostDescription(
+                            subject.hwAddress(),
+                            VlanId.vlanId(),
+                            loaction,
+                            annotations);
+                    System.out.printf("Port %s is added, host: %s, device: %s", portNumber, hostId, deviceId);
+                    System.out.printf("Port %s is added, host: %s, device: %s\n", portNumber, hostId, deviceId);
+                    break;
+                case PORT_REMOVED:
+                    System.out.printf("Port removed is detected in ovsdb listener!");
+                    HostId host = HostId.hostId(subject.hwAddress(), VlanId.vlanId());
+                    System.out.printf("Port %s is removed, hw address: %s, host: %s",
+                            subject.portName(), subject.hwAddress(), host);
+                    System.out.printf("Port %s is removed, hw address: %s, host: %s\n",
+                            subject.portName(), subject.hwAddress(), host);
+                    break;
+                default:
+                    break;
+            }
+        }
+
+    }
+
+    public URI uri(String value) {
+        try {
+            return new URI("of", toHex(Long.valueOf(value)), null);
+        } catch (URISyntaxException e) {
+            return null;
+        }
+    }
+
 
 //    public static void main(String[] args) {
 //        OrchestratorApp orch = new OrchestratorApp();

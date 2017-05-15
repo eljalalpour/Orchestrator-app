@@ -36,6 +36,7 @@ public class Agent {
     static Socket clientSocket = null;
     static final String DEF_CLICK_INSTANCE_CONF =
             "require(package \"FTSFC\");" +
+                    "FTControlElement(%d);" +
                     "FromDevice(p0)" +
 //                    "->SetVLANAnno" +
                     "->Queue" +
@@ -51,6 +52,7 @@ public class Agent {
                     "->ToDevice(p0);";
     static final String FIRST_CLICK_INSTANCE_CONF =
             "require(package \"FTSFC\");" +
+                    "FTControlElement(%d);" +
                     "FromDevice(p0)" +
 //                    "->SetVLANAnno" +
                     "->Queue" +
@@ -66,6 +68,7 @@ public class Agent {
                     "->ToDevice(p0);";
     static final String LAST_CLICK_INSTANCE_CONF =
             "require(package \"FTSFC\");" +
+                    "FTControlElement(%d);" +
                     "FromDevice(p0)" +
 //                    "->SetVLANAnno" +
                     "->Queue" +
@@ -123,6 +126,7 @@ public class Agent {
             command = String.format(FIRST_CLICK_INSTANCE_CONF,
 //                    firstVlanId + chainPos,
 //                    firstVlanId + chainLength + 1,
+                    CLICK_INS_PORT,
                     id,
                     firstVlanId + chainPos,
                     failureCount,
@@ -135,6 +139,7 @@ public class Agent {
             System.out.printf("firstVlanId: %d, chain-length: %d", firstVlanId, chainLength);
             command = String.format(LAST_CLICK_INSTANCE_CONF,
 //                    firstVlanId + chainPos,
+                    CLICK_INS_PORT,
                     id,
                     firstVlanId + chainPos,
                     failureCount,
@@ -147,6 +152,7 @@ public class Agent {
             System.out.printf("firstVlanId: %d, chain-length: %d", firstVlanId, chainLength);
             command = String.format(DEF_CLICK_INSTANCE_CONF,
 //                    firstVlanId + chainPos,
+                    CLICK_INS_PORT,
                     id,
                     firstVlanId + chainPos,
                     failureCount,
