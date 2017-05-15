@@ -291,7 +291,7 @@ public class Agent {
 
     public void putState(byte id, byte[] states, int offset, int length, int port) {
         try {
-            Socket socket = new Socket("localhost\n", port);
+            Socket socket = new Socket("localhost", port);
             OutputStream out = socket.getOutputStream();
             DataOutputStream outputStream = new DataOutputStream(out);
             outputStream.write(Commands.getPutCommand(id, states, offset, length));
