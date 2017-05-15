@@ -164,6 +164,18 @@ public class Agent {
         return command;
     }
 
+    public void fetchState(byte chainPos, byte n, byte f) {
+        byte[] whoToAsk = new byte[n];
+        for (byte i = 0; i < n; i++) whoToAsk[i] = i;
+        whoToAsk[chainPos] = (byte)((chainPos + 1) % n);
+        boolean[] successes = new boolean[f + 1];
+        FetchStateThread[] threads = new FetchStateThread[f + 1];
+
+        for (byte i = (byte)((chainPos - f) % n); i <= chainPos; ++i) {
+
+        }//for
+    }
+
     public void handleInit(boolean fetchState, byte[] bytes) {
         // Run the click instance
         try {
@@ -205,19 +217,22 @@ public class Agent {
             byte n = (byte)Commands.parseChainLength(bytes);
             int[] whoToAsk = new int[f + 1];
             for (byte i = 0; i < whoToAsk.length; ++i) whoToAsk[i] = whoToAsk(f, n, i, chainPos);
-            whoToAsk[chainPos] = (chainPos + 1) % n;
+            whoToAsk[f] = (chainPos + 1) % n;
+
+            for (byte i = 0; i < whoToAsk.length; ++i)
+                System.out.printf("Who to ask %d is %d \n", i, whoToAsk[i]);
 
 //            byte[][] states = new byte[f + 1][];
             boolean[] successes = new boolean[f + 1];
             FetchStateThread[] threads = new FetchStateThread[f + 1];
 
             do {
-                // Run a thread for the required states
+                // Run a thread per required state
                 for (byte i = 0; i < whoToAsk.length; ++i) {
                     if (successes[i]) continue;
 
                     threads[i] = new FetchStateThread(ip4Addresses.get(whoToAsk[i]),
-                            DEFAULT_AGENT_PORT, whoToAsk(f, n, i, chainPos));
+                            DEFAULT_AGENT_PORT, (byte)((chainPos -f + i) % n));
                     threads[i].start();
                 }//for
 
@@ -228,9 +243,12 @@ public class Agent {
                         threads[i].join();
                         successes[i] = threads[i].getSuccess();
                         if (successes[i]) {
-                            // TODO: check if the first parameter is correct
-                            putState(i, threads[i].getMBState());
+                            putState((byte)((chainPos - f + i) % n),
+                                    threads[i].getMBState());
                         }//if
+                        else {
+                            whoToAsk[i] = (byte)(whoToAsk[i] + 1) % n;
+                        }//else
                     }//try
                     catch(InterruptedException iExc) {
                         iExc.printStackTrace();

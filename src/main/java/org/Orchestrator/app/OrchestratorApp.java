@@ -287,11 +287,11 @@ public class OrchestratorApp {
         try {
 //            HostId hostId = (HostId) deviceEvent.port().element().id();
             HostId hostId = hostEvent.subject().id();
-            System.out.printf("Host %s is down", hostId);
-            System.out.printf("Searching for the failed chain");
+            System.out.printf("Host %s is down\n", hostId);
+            System.out.printf("Searching for the failed chain\n");
             for(FaultTolerantChain ch : placedChains) {
-                System.out.printf("Searching for the failed host in chain");
-                System.out.printf("Replica mapping size: %s", ch.replicaMapping.size());
+                System.out.printf("Searching for the failed host in chain\n");
+                System.out.printf("Replica mapping size: %s\n", ch.replicaMapping.size());
                 byte j = 0;
                 for(Host host : ch.replicaMapping) {
                     System.out.printf("Check host %s", host.id());
@@ -302,13 +302,13 @@ public class OrchestratorApp {
                         int index = findAvailableHost(ch);
                         Host availableHost = availableHosts.get(index);
                         System.out.printf("Host %s is chosen for recovery", availableHost.id());
+
+                        ch.replicaMapping.remove(j);
+                        ch.replicaMapping.add(j, availableHost);
                         init(Commands.MB_INIT_AND_FETCH_STATE, ch.getMB(j),
                                 privateToPublicAddresses.get(availableHost.ipAddresses().iterator().next().toInetAddress())
                                 , j, ch.getFirstTag(), ch);
                         availableHosts.remove(index);
-
-                        ch.replicaMapping.remove(j);
-                        ch.replicaMapping.add(j, availableHost);
                         reroute(ch, j);
                         found = true;
                         break;
