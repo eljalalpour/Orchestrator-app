@@ -10,7 +10,6 @@ import org.onosproject.net.device.DeviceService;
 import org.onosproject.net.flow.*;
 import org.onosproject.net.host.*;
 import org.onosproject.net.topology.TopologyService;
-import org.onosproject.ovsdb.controller.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,9 +51,6 @@ public class OrchestratorApp {
 
     @Reference(cardinality = ReferenceCardinality.MANDATORY_UNARY)
     private ApplicationService applicationService;
-
-    @Reference(cardinality = ReferenceCardinality.MANDATORY_UNARY)
-    protected OvsdbController controller;
 
     private HashMap <Short, ArrayList<FlowRule>> tagFlows;
 
