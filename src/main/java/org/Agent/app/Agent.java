@@ -121,8 +121,8 @@ public class Agent {
     private String runClickCommand() {
         String command;
         if (chainPos == 0) {
-            System.out.println("At the beginning of the chain");
-            System.out.printf("firstVlanId: %d, chain-length: %d", firstVlanId, chainLength);
+            System.out.println("At the beginning of the chain\n");
+            System.out.printf("firstVlanId: %d, chain-length: %d\n", firstVlanId, chainLength);
             command = String.format(FIRST_CLICK_INSTANCE_CONF,
 //                    firstVlanId + chainPos,
 //                    firstVlanId + chainLength + 1,
@@ -135,8 +135,8 @@ public class Agent {
             );
         }//if
         else if (chainPos == (chainLength - 1)) {
-            System.out.println("At the end of the chain");
-            System.out.printf("firstVlanId: %d, chain-length: %d", firstVlanId, chainLength);
+            System.out.println("At the end of the chain\n");
+            System.out.printf("firstVlanId: %d, chain-length: %d\n", firstVlanId, chainLength);
             command = String.format(LAST_CLICK_INSTANCE_CONF,
 //                    firstVlanId + chainPos,
                     CLICK_INS_PORT,
@@ -148,8 +148,8 @@ public class Agent {
             );
         }//if
         else {
-            System.out.println("At the middle of the chain");
-            System.out.printf("firstVlanId: %d, chain-length: %d", firstVlanId, chainLength);
+            System.out.println("At the middle of the chain\n");
+            System.out.printf("firstVlanId: %d, chain-length: %d\n", firstVlanId, chainLength);
             command = String.format(DEF_CLICK_INSTANCE_CONF,
 //                    firstVlanId + chainPos,
                     CLICK_INS_PORT,
@@ -253,7 +253,7 @@ public class Agent {
     public byte[] handleGetState(byte[] bytes) {
         byte[] state = null;
         try {
-            Socket socket = new Socket("localhost", CLICK_INS_PORT);
+            Socket socket = new Socket("localhost\n", CLICK_INS_PORT);
             socket.setTcpNoDelay(true);
 
             OutputStream out = socket.getOutputStream();
@@ -264,7 +264,7 @@ public class Agent {
             DataInputStream inputStream = new DataInputStream(in);
             // First read the size of the state, then read the state
             int size = inputStream.read();
-            System.out.printf("State size is: %d\n", size);
+            System.out.printf("State size is: %d\n\n", size);
 
             // Read junk
             byte[] junk = new byte[3];
@@ -274,9 +274,9 @@ public class Agent {
             state = new byte[size];
             inputStream.read(state, 0, size);
 
-            System.out.println("State: ");
+            System.out.println("State:\n");
             for (int i = 0; i < size; i++)
-                System.out.printf("%d ", state[i]);
+                System.out.printf("%d \n", state[i]);
 
             out.close();
             in.close();
@@ -291,7 +291,7 @@ public class Agent {
 
     public void putState(byte id, byte[] states, int offset, int length, int port) {
         try {
-            Socket socket = new Socket("localhost", port);
+            Socket socket = new Socket("localhost\n", port);
             OutputStream out = socket.getOutputStream();
             DataOutputStream outputStream = new DataOutputStream(out);
             outputStream.write(Commands.getPutCommand(id, states, offset, length));
@@ -368,17 +368,17 @@ public class Agent {
                     if (bytes.length > 0) {
                         switch (bytes[CMD_OFFSET]) {
                             case Commands.MB_INIT:
-                                System.out.println("Received init command");
+                                System.out.println("Received init command\n");
                                 agent.handleInit(false, bytes);
                                 break;
 
                             case Commands.MB_INIT_AND_FETCH_STATE:
-                                System.out.println("Received init and fetch state command");
+                                System.out.println("Received init and fetch state command\n");
                                 agent.handleInit(true, bytes);
                                 break;
 
                             case Commands.GET_STATE:
-                                System.out.println("Received get command");
+                                System.out.println("Received get command\n");
                                 byte[] states = agent.handleGetState(bytes);
                                 OutputStream out = clientSocket.getOutputStream();
                                 out.write(states.length);
@@ -455,7 +455,7 @@ public class Agent {
 //
 //            byte[] states;
 //            try {
-//                Socket socket = new Socket("127.0.0.1", DEFAULT_AGENT_PORT);
+//                Socket socket = new Socket("127.0.0.1\n", DEFAULT_AGENT_PORT);
 //                socket.setTcpNoDelay(true);
 //                OutputStream out = socket.getOutputStream();
 //                out.write(Commands.getStateCommand((byte) 10));
@@ -469,9 +469,9 @@ public class Agent {
 //
 //                out.close();
 //                in.close();
-//                System.out.printf("State (%d): ", size);
+//                System.out.printf("State (%d): \n", size);
 //                for (int i = 0; i < size; i++)
-//                    System.out.printf("%d ", states[i]);
+//                    System.out.printf("%d \n", states[i]);
 //
 //                agent2.putState((byte) 10, states, 0, size, 10002);
 //            }//try
