@@ -6,8 +6,6 @@ import org.onlab.packet.VlanId;
 import org.onosproject.app.ApplicationService;
 import org.onosproject.core.ApplicationId;
 import org.onosproject.net.*;
-import org.onosproject.net.device.DeviceEvent;
-import org.onosproject.net.device.DeviceListener;
 import org.onosproject.net.device.DeviceService;
 import org.onosproject.net.flow.*;
 import org.onosproject.net.host.*;
@@ -37,7 +35,7 @@ public class OrchestratorApp {
     private ApplicationId appId;
 
     private ArrayList<Host> availableHosts;
-    private HashMap<Port, Host> port2HostMap;
+
     private ArrayList<FaultTolerantChain> placedChains = new ArrayList<>();
 
     @Reference(cardinality = ReferenceCardinality.MANDATORY_UNARY)
@@ -64,9 +62,9 @@ public class OrchestratorApp {
 
     private HostListener hostListener = new InnerHostListener();
 
-    private DeviceListener deviceListener = new InnerDeviceistener();
-
-    private OvsdbEventListener ovsdbListener = new InnerOvsdbEventListener();
+//    private DeviceListener deviceListener = new InnerDeviceistener();
+//
+//    private OvsdbEventListener ovsdbListener = new InnerOvsdbEventListener();
 
     /**
      * The orchestrator sends a MB_INIT message to the replica.
@@ -362,7 +360,7 @@ public class OrchestratorApp {
         }
         this.appId = applicationService.getId("org.orchestrator.app");
         availableHosts = new ArrayList<>();
-        port2HostMap = new HashMap<>();
+
         for (Iterator<Host> h = hostService.getHosts().iterator(); h.hasNext(); /*empty*/) {
             Host host = h.next();
             System.out.printf("Host %s is available!", host);
@@ -375,12 +373,6 @@ public class OrchestratorApp {
         // Listen for failures
         hostService.addListener(hostListener);
         System.out.printf("host listener added!");
-
-        deviceService.addListener(deviceListener);
-        System.out.printf("device listener added!");
-
-        controller.addOvsdbEventListener(ovsdbListener);
-        System.out.printf("Ovsdb listener added!");
 
         deployChain("192.168.200.14,0,1,192.168.200.17", (byte)1);
     }
@@ -420,94 +412,6 @@ public class OrchestratorApp {
             }//switch
         }
     }
-
-    private class InnerDeviceistener implements DeviceListener {
-        @Override
-        public void event(DeviceEvent event) {
-            System.out.printf("In device event handler!");
-            log.debug("In device event handler!");
-            log.error("In device event handler!");
-            log.warn("In device event handler!");
-            System.out.println("In device event handler!");
-            switch (event.type()) {
-                case PORT_ADDED:
-                    System.out.printf("Port %s is added!", event.subject());
-                    System.out.printf("Port %s is added!\n", event.subject());
-                    break;
-
-                case PORT_REMOVED:
-                    System.out.printf("Port %s is removed!", event.subject());
-                    System.out.printf("Port %s is removed!\n", event.subject());
-                    break;
-
-                default:
-                    break;
-            }//switch
-        }
-
-    }
-
-    private class InnerOvsdbEventListener implements OvsdbEventListener {
-
-        @Override
-        public void handle(OvsdbEvent<EventSubject> event) {
-            System.out.printf("In Ovsdb event handler!");
-            log.debug("In Ovsdb event handler!");
-            log.error("In Ovsdb event handler!");
-            log.warn("In Ovsdb event handler!");
-            System.out.println("In Ovsdb event handler!");
-
-            OvsdbEventSubject subject = null;
-            if (event.subject() instanceof OvsdbEventSubject) {
-                subject = (OvsdbEventSubject) event.subject();
-            }
-
-            // If ifaceid is null,it indicates this is not a vm port.
-            if (subject.ifaceid() == null) {
-                return;
-            }
-            switch (event.type()) {
-                case PORT_ADDED:
-                    System.out.printf("Port added is detected in ovsdb listener!");
-                    HostId hostId = HostId.hostId(subject.hwAddress(), VlanId.vlanId());
-                    DeviceId deviceId = DeviceId.deviceId(uri(subject.dpid().value()));
-                    PortNumber portNumber = PortNumber.portNumber(subject
-                            .portNumber().value(), subject.portName().value());
-                    HostLocation loaction = new HostLocation(deviceId, portNumber,
-                            0L);
-                    SparseAnnotations annotations = DefaultAnnotations.builder()
-                            .set("ifaceid", subject.ifaceid().value()).build();
-                    HostDescription hostDescription = new DefaultHostDescription(
-                            subject.hwAddress(),
-                            VlanId.vlanId(),
-                            loaction,
-                            annotations);
-                    System.out.printf("Port %s is added, host: %s, device: %s", portNumber, hostId, deviceId);
-                    System.out.printf("Port %s is added, host: %s, device: %s\n", portNumber, hostId, deviceId);
-                    break;
-                case PORT_REMOVED:
-                    System.out.printf("Port removed is detected in ovsdb listener!");
-                    HostId host = HostId.hostId(subject.hwAddress(), VlanId.vlanId());
-                    System.out.printf("Port %s is removed, hw address: %s, host: %s",
-                            subject.portName(), subject.hwAddress(), host);
-                    System.out.printf("Port %s is removed, hw address: %s, host: %s\n",
-                            subject.portName(), subject.hwAddress(), host);
-                    break;
-                default:
-                    break;
-            }
-        }
-
-    }
-
-    public URI uri(String value) {
-        try {
-            return new URI("of", toHex(Long.valueOf(value)), null);
-        } catch (URISyntaxException e) {
-            return null;
-        }
-    }
-
 
 //    public static void main(String[] args) {
 //        OrchestratorApp orch = new OrchestratorApp();
