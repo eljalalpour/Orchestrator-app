@@ -38,9 +38,9 @@ public class Agent {
             "require(package \"FTSFC\");" +
                     "FTControlElement(%d);" +
                     "FromDevice(p0)" +
-//                    "->SetVLANAnno" +
+                    "->SetVLANAnno" +
                     "->Queue" +
-//                    "->FTFilterElement(%d)" +
+                    "->FTFilterElement(%d)" +
                     "->CheckIPHeader(14)" +
                     "->se::FTStateElement(ID %d, VLAN_ID %d, F %d)" +
                     "->CheckIPHeader(14)" +
@@ -54,9 +54,9 @@ public class Agent {
             "require(package \"FTSFC\");" +
                     "FTControlElement(%d);" +
                     "FromDevice(p0)" +
-//                    "->SetVLANAnno" +
+                    "->SetVLANAnno" +
                     "->Queue" +
-//                    "->FTFilterElement(%d,%d)" +
+                    "->FTFilterElement(%d,%d)" +
                     "->FTAppenderElement(%d)" +
                     "->CheckIPHeader(14)" +
                     "->se::FTStateElement(ID %d, VLAN_ID %d, F %d)" +
@@ -71,9 +71,9 @@ public class Agent {
             "require(package \"FTSFC\");" +
                     "FTControlElement(%d);" +
                     "FromDevice(p0)" +
-//                    "->SetVLANAnno" +
+                    "->SetVLANAnno" +
                     "->Queue" +
-//                    "->FTFilterElement(%d)" +
+                    "->FTFilterElement(%d)" +
                     "->CheckIPHeader(14)" +
                     "->se::FTStateElement(ID %d, VLAN_ID %d, F %d)" +
                     "->CheckIPHeader(14)" +
@@ -125,8 +125,8 @@ public class Agent {
             System.out.println("At the beginning of the chain\n");
             System.out.printf("firstVlanId: %d, chain-length: %d\n", firstVlanId, chainLength);
             command = String.format(FIRST_CLICK_INSTANCE_CONF,
-//                    firstVlanId + chainPos,
-//                    firstVlanId + chainLength + 1,
+                    firstVlanId + chainPos,
+                    firstVlanId + chainLength + 1,
                     firstVlanId,
                     CLICK_INS_PORT,
                     id,
@@ -140,7 +140,7 @@ public class Agent {
             System.out.println("At the end of the chain\n");
             System.out.printf("firstVlanId: %d, chain-length: %d\n", firstVlanId, chainLength);
             command = String.format(LAST_CLICK_INSTANCE_CONF,
-//                    firstVlanId + chainPos,
+                    firstVlanId + chainPos,
                     CLICK_INS_PORT,
                     id,
                     firstVlanId + chainPos,
@@ -153,7 +153,7 @@ public class Agent {
             System.out.println("At the middle of the chain\n");
             System.out.printf("firstVlanId: %d, chain-length: %d\n", firstVlanId, chainLength);
             command = String.format(DEF_CLICK_INSTANCE_CONF,
-//                    firstVlanId + chainPos,
+                    firstVlanId + chainPos,
                     CLICK_INS_PORT,
                     id,
                     firstVlanId + chainPos,
