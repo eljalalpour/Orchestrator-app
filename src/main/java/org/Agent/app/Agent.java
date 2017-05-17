@@ -57,6 +57,7 @@ public class Agent {
 //                    "->SetVLANAnno" +
                     "->Queue" +
 //                    "->FTFilterElement(%d,%d)" +
+                    "->FTAppenderElement(%d)" +
                     "->CheckIPHeader(14)" +
                     "->se::FTStateElement(ID %d, VLAN_ID %d, F %d)" +
                     "->CheckIPHeader(14)" +
@@ -126,6 +127,7 @@ public class Agent {
             command = String.format(FIRST_CLICK_INSTANCE_CONF,
 //                    firstVlanId + chainPos,
 //                    firstVlanId + chainLength + 1,
+                    firstVlanId,
                     CLICK_INS_PORT,
                     id,
                     firstVlanId + chainPos,
