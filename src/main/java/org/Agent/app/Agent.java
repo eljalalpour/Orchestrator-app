@@ -80,11 +80,13 @@ public class Agent {
                     "->MB%d::CounterMB" +
                     "->[1]se;" +
                     "se[1]" +
+                    "->be::FTBufferElement" +
                     "->SetVLANAnno" +
                     "->VLANEncap(VLAN_ID %d)" +
-                    "->be::FTBufferElement" +
                     "->pe::FTPassElement;" +
                     "be[1]" +
+                    "->SetVLANAnno" +
+                    "->VLANEncap(VLAN_ID %d)" +
                     "->[1]pe;" +
                     "pe->ToDevice(p0)";
 
@@ -125,10 +127,10 @@ public class Agent {
             System.out.println("At the beginning of the chain\n");
             System.out.printf("firstVlanId: %d, chain-length: %d\n", firstVlanId, chainLength);
             command = String.format(FIRST_CLICK_INSTANCE_CONF,
+                    CLICK_INS_PORT,
                     firstVlanId + chainPos,
                     firstVlanId + chainLength + 1,
                     firstVlanId,
-                    CLICK_INS_PORT,
                     id,
                     firstVlanId + chainPos,
                     failureCount,
@@ -140,21 +142,22 @@ public class Agent {
             System.out.println("At the end of the chain\n");
             System.out.printf("firstVlanId: %d, chain-length: %d\n", firstVlanId, chainLength);
             command = String.format(LAST_CLICK_INSTANCE_CONF,
-                    firstVlanId + chainPos,
                     CLICK_INS_PORT,
+                    firstVlanId + chainPos,
                     id,
                     firstVlanId + chainPos,
                     failureCount,
                     middlebox,
-                    firstVlanId + chainPos + 1
+                    firstVlanId + chainPos + 1,
+                    firstVlanId + chainPos + 2
             );
-        }//if
+        }//else if
         else {
             System.out.println("At the middle of the chain\n");
             System.out.printf("firstVlanId: %d, chain-length: %d\n", firstVlanId, chainLength);
             command = String.format(DEF_CLICK_INSTANCE_CONF,
-                    firstVlanId + chainPos,
                     CLICK_INS_PORT,
+                    firstVlanId + chainPos,
                     id,
                     firstVlanId + chainPos,
                     failureCount,
