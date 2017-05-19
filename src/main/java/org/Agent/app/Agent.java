@@ -37,6 +37,7 @@ public class Agent {
     static final String FIRST_CLICK_INSTANCE_CONF =
             "require(package \"FTSFC\");" +
                     "FTControlElement(%d);" +
+                    "FromDevice(p0)" +
                     "->FTFilterElement(%d, %d)" +
                     "->CheckIPHeader(18)" +
                     "->FTAppenderElement(1)" +
@@ -54,6 +55,7 @@ public class Agent {
     static final String LAST_CLICK_INSTANCE_CONF =
             "require(package \"FTSFC\");" +
                     "FTControlElement(%d);" +
+                    "FromDevice(p0)" +
                     "->FTFilterElement(%d)" +
                     "->VLANDecap" +
                     "->CheckIPHeader(14)" +
@@ -79,6 +81,7 @@ public class Agent {
     static final String DEF_CLICK_INSTANCE_CONF =
             "require(package \"FTSFC\");" +
                     "FTControlElement(%d);" +
+                    "FromDevice(p0)" +
                     "->FTFilterElement(%d)" +
                     "->VLANDecap" +
                     "->CheckIPHeader(14)" +

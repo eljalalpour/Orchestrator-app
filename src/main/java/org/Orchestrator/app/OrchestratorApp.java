@@ -25,7 +25,7 @@ import static org.onlab.util.Tools.toHex;
 public class OrchestratorApp {
     private static final int AGENT_PORT = 2222;
     private static final int FORWARD_PRIORITY = 15;
-    private static byte tag = 1;
+    private static byte tag = 5;
     public static final String DELIM = ",";
     private static final int MIN_SRC_CHAIN_DST_LEN = 3;
 
@@ -101,9 +101,9 @@ public class OrchestratorApp {
         for (byte i = 0; i < chain.length(); ++i) {
             int index = findAvailableHost(chain);
             Host host = availableHosts.get(index);
-            // System.out.printf("Host %s is chosen for the placement of MB %s", host.id(), i);
+            System.out.printf("Host %s is chosen for the placement of MB %s", host.id(), i);
             Ip4Address ip = host.ipAddresses().iterator().next().getIp4Address();
-            // System.out.printf("Init command is sent to IP address %s", privateToPublicAddresses.get(ip.toInetAddress()));
+            System.out.printf("Init command is sent to IP address %s", privateToPublicAddresses.get(ip.toInetAddress()));
             init(Commands.MB_INIT, chain.getMB(i), privateToPublicAddresses.get(ip.toInetAddress()), i, chain.getFirstTag(), chain);
             chain.replicaMapping.add(host);
             availableHosts.remove(index);
@@ -123,7 +123,7 @@ public class OrchestratorApp {
 
     private void route(FaultTolerantChain chain){
         // We assume that an IP address is assigned to a single host
-        // System.out.printf("Routing");
+        System.out.printf("Routing");
         for(byte i = 0; i < chain.getChainHosts().size() - 1; ++i) {
             Host s = chain.getChainHosts().get(i);
             Host t = chain.getChainHosts().get(i + 1);
@@ -137,7 +137,7 @@ public class OrchestratorApp {
     }
 
     private void route(Host s, Host t, short tag) {
-        // System.out.printf("Routing between the source %s and the target %s", s, t);
+        System.out.printf("Routing between the source %s and the target %s", s, t);
         ArrayList<FlowRule> flowRules = new ArrayList<>();
         try {
             for (ConnectPoint cp: findPath(s, t)) {
@@ -146,7 +146,7 @@ public class OrchestratorApp {
                 flowRules.add(flowRule);
             }//for
             tagFlows.put(tag, flowRules);
-            // System.out.printf("adding tag %s", tag);
+            System.out.printf("adding tag %s", tag);
         }//try
         catch(NoSuchElementException nseExc) {
             nseExc.printStackTrace();
@@ -216,13 +216,13 @@ public class OrchestratorApp {
 
         log.debug("removing tags {}",
                 (short)(chain.getFirstTag() + failedIndex));
-        // System.out.printf("removing tags %s",
-                //(short)(chain.getFirstTag() + failedIndex));
+        System.out.printf("removing tags %s",
+                (short)(chain.getFirstTag() + failedIndex));
 
         removeRules((short)(chain.getFirstTag() + failedIndex));
 
-        // System.out.printf("removing tags %s",
-                //(short)(chain.getFirstTag() + failedIndex + 1));
+        System.out.printf("removing tags %s",
+                (short)(chain.getFirstTag() + failedIndex + 1));
         log.debug("removing tags {}",
                 (short)(chain.getFirstTag() + failedIndex + 1));
 
@@ -233,14 +233,14 @@ public class OrchestratorApp {
 
         if (failedIndex == 0 || failedIndex == chain.length() - 1) {
             short tag = (short)(chain.getFirstTag() + chain.length() + 1);
-            // System.out.printf("removing tag %s", tag);
+            System.out.printf("removing tag %s", tag);
             log.debug("removing tags {}", tag);
             removeRules(tag);
             route(chain.getChainHosts().get(chain.getChainHosts().size() - 2),
                   chain.getChainHosts().get(1),
                   tag);
         }//if
-        // System.out.printf("At the end of reroute!");
+        System.out.printf("At the end of reroute!");
         log.debug("At the end of reroute!");
     }
 
@@ -289,34 +289,34 @@ public class OrchestratorApp {
 
     private void recover(HostEvent hostEvent) {
         // TODO: find the failed host if any, and remove it from replica mapping, replace with new host
-        // System.out.printf("Recovering...");
+        System.out.printf("Recovering...");
         log.debug("Recovering...");
         boolean found = false;
         try {
 //            HostId hostId = (HostId) deviceEvent.port().element().id();
             HostId hostId = hostEvent.subject().id();
-            // System.out.printf("Host %s is down\n", hostId);
+            System.out.printf("Host %s is down\n", hostId);
             log.debug("Host {} is down", hostId);
 
-            // System.out.printf("Searching for the failed chain\n");
+            System.out.printf("Searching for the failed chain\n");
             log.debug("Searching for the failed chain");
             for(FaultTolerantChain ch : placedChains) {
-                // System.out.printf("Searching for the failed host in chain\n");
+                System.out.printf("Searching for the failed host in chain\n");
                 log.debug("Searching for the failed host in chain");
-                // System.out.printf("Replica mapping size: %s\n", ch.replicaMapping.size());
+                System.out.printf("Replica mapping size: %s\n", ch.replicaMapping.size());
                 log.debug("Replica mapping size: {}", ch.replicaMapping.size());
                 byte j = 0;
                 for(Host host : ch.replicaMapping) {
-                    // System.out.printf("Check host %s", host.id());
+                    System.out.printf("Check host %s", host.id());
                     log.debug("Check host {}", host.id());
 
                     if(host.id().equals(hostId)) {
-                        // System.out.printf("The failed host is found!");
+                        System.out.printf("The failed host is found!");
                         log.debug("The failed host is found!");
 
                         int index = findAvailableHost(ch);
                         Host availableHost = availableHosts.get(index);
-                        // System.out.printf("Host %s is chosen for recovery", availableHost.id());
+                        System.out.printf("Host %s is chosen for recovery", availableHost.id());
                         log.debug("Host {} is chosen for recovery", availableHost.id());
 
                         ch.replicaMapping.remove(j);
@@ -337,7 +337,7 @@ public class OrchestratorApp {
         catch(IOException ioExc) {
             ioExc.printStackTrace();
         }//catch
-        // System.out.printf("At the end of recovery!");
+        System.out.printf("At the end of recovery!");
         log.debug("At the end of recovery!");
     }
 
@@ -376,7 +376,7 @@ public class OrchestratorApp {
 
         for (Iterator<Host> h = hostService.getHosts().iterator(); h.hasNext(); /*empty*/) {
             Host host = h.next();
-            // System.out.printf("Host %s is available!", host);
+            System.out.printf("Host %s is available!", host);
             availableHosts.add(host);
 
         }//for
@@ -385,7 +385,7 @@ public class OrchestratorApp {
 
         // Listen for failures
         hostService.addListener(hostListener);
-        // System.out.printf("host listener added!");
+        System.out.printf("host listener added!");
 
         deployChain("192.168.200.14,0,1,192.168.200.17", (byte)1);
     }
@@ -393,7 +393,7 @@ public class OrchestratorApp {
     @Deactivate
     protected void deactivate()
     {
-        // System.out.printf("Stopped");
+        System.out.printf("Stopped");
         flowRuleService.removeFlowRulesById(appId);
     }
 
@@ -403,17 +403,17 @@ public class OrchestratorApp {
     private class InnerHostListener implements HostListener {
         @Override
         public void event(HostEvent event) {
-            // System.out.printf("In host event handler!");
+            System.out.printf("In host event handler!");
             log.debug("In host event handler!");
             switch (event.type()) {
                 case HOST_ADDED:
                     log.debug("Host {} is added!", event.subject());
-                    // System.out.printf("Host %s is added!\n", event.subject());
+                    System.out.printf("Host %s is added!\n", event.subject());
                     break;
 
                 case HOST_REMOVED:
                     log.debug("Host {} is removed!", event.subject());
-                    // System.out.printf("Host %s is removed!\n", event.subject());
+                    System.out.printf("Host %s is removed!\n", event.subject());
                     recover(event);
                     break;
 
