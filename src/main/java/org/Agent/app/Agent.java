@@ -34,61 +34,62 @@ public class Agent {
     static final int DEFAULT_AGENT_PORT = 2222;
     static final int CLICK_INS_PORT = 10001;
     static Socket clientSocket = null;
-    static final String DEF_CLICK_INSTANCE_CONF =
-            "require(package \"FTSFC\");" +
-                    "FTControlElement(%d);" +
-                    "FromDevice(p0)" +
-                    "->SetVLANAnno" +
-                    "->Queue" +
-                    "->FTFilterElement(%d)" +
-                    "->CheckIPHeader(14)" +
-                    "->se::FTStateElement(ID %d, VLAN_ID %d, F %d)" +
-                    "->CheckIPHeader(14)" +
-                    "->MB%d::CounterMB" +
-                    "->[1]se;" +
-                    "se[1]" +
-                    "->SetVLANAnno" +
-                    "->VLANEncap(VLAN_ID %d)" +
-                    "->ToDevice(p0);";
     static final String FIRST_CLICK_INSTANCE_CONF =
             "require(package \"FTSFC\");" +
                     "FTControlElement(%d);" +
-                    "FromDevice(p0)" +
-                    "->SetVLANAnno" +
-                    "->Queue" +
-                    "->FTFilterElement(%d,%d)" +
-                    "->FTAppenderElement(%d)" +
+                    "->FTFilterElement(%d, %d)" +
+                    "->CheckIPHeader(18)" +
+                    "->FTAppenderElement(1)" +
+                    "->VLANDecap" +
                     "->CheckIPHeader(14)" +
                     "->se::FTStateElement(ID %d, VLAN_ID %d, F %d)" +
                     "->CheckIPHeader(14)" +
-                    "->MB%d::CounterMB" +
+                    "->MB%d::CounterMB(ID %d)" +
                     "->[1]se;" +
                     "se[1]" +
-                    "->SetVLANAnno" +
                     "->VLANEncap(VLAN_ID %d)" +
-                    "->ToDevice(p0);";
+                    "->VLANEncap(VLAN_ID %d)" +
+                    "->ToDevice(p0)";
+
     static final String LAST_CLICK_INSTANCE_CONF =
             "require(package \"FTSFC\");" +
                     "FTControlElement(%d);" +
-                    "FromDevice(p0)" +
-                    "->SetVLANAnno" +
-                    "->Queue" +
                     "->FTFilterElement(%d)" +
+                    "->VLANDecap" +
+                    "->CheckIPHeader(14)" +
+                    "->se::FTStateElement(ID %d, VLAN_ID %d, F %d)" +
+                    "->MB%d::CounterMB(ID %d)" +
+                    "->CheckIPHeader(14)" +
+                    "->[1]se;" +
+                    "se[1]" +
+                    "->CheckIPHeader(14)" +
+                    "->be::FTBufferElement" +
+                    "->VLANEncap(VLAN_ID %d)" +
+                    "->VLANEncap(VLAN_ID %d)" +
+                    "->CheckIPHeader(22)" +
+                    "->pe::FTPassElement;" +
+                    "be[1]" +
+                    "->VLANEncap(VLAN_ID %d)" +
+                    "->VLANEncap(VLAN_ID %d)" +
+                    "->CheckIPHeader(22)" +
+                    "->[1]pe;" +
+                    "pe" +
+                    "->ToDevice(p0);";
+
+    static final String DEF_CLICK_INSTANCE_CONF =
+            "require(package \"FTSFC\");" +
+                    "FTControlElement(%d);" +
+                    "->FTFilterElement(%d)" +
+                    "->VLANDecap" +
                     "->CheckIPHeader(14)" +
                     "->se::FTStateElement(ID %d, VLAN_ID %d, F %d)" +
                     "->CheckIPHeader(14)" +
-                    "->MB%d::CounterMB" +
+                    "->MB%d::CounterMB(ID %d)" +
                     "->[1]se;" +
                     "se[1]" +
-                    "->be::FTBufferElement" +
-                    "->SetVLANAnno" +
                     "->VLANEncap(VLAN_ID %d)" +
-                    "->pe::FTPassElement;" +
-                    "be[1]" +
-                    "->SetVLANAnno" +
                     "->VLANEncap(VLAN_ID %d)" +
-                    "->[1]pe;" +
-                    "pe->ToDevice(p0)";
+                    "->ToDevice(p0)";
 
     public static final int CMD_OFFSET = 0;
 
@@ -130,11 +131,12 @@ public class Agent {
                     CLICK_INS_PORT,
                     firstVlanId + chainPos,
                     firstVlanId + chainLength + 1,
-                    firstVlanId,
                     id,
                     firstVlanId + chainPos,
                     failureCount,
                     middlebox,
+                    id,
+                    firstVlanId + chainPos + 1,
                     firstVlanId + chainPos + 1
             );
         }//if
@@ -148,7 +150,10 @@ public class Agent {
                     firstVlanId + chainPos,
                     failureCount,
                     middlebox,
+                    id,
                     firstVlanId + chainPos + 1,
+                    firstVlanId + chainPos + 1,
+                    firstVlanId + chainPos + 2,
                     firstVlanId + chainPos + 2
             );
         }//else if
@@ -162,6 +167,8 @@ public class Agent {
                     firstVlanId + chainPos,
                     failureCount,
                     middlebox,
+                    id,
+                    firstVlanId + chainPos + 1,
                     firstVlanId + chainPos + 1
             );
         }//else
