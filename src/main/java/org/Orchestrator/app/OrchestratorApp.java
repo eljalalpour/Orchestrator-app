@@ -162,7 +162,7 @@ public class OrchestratorApp {
     private FlowRule forwardRule(DeviceId deviceId, PortNumber outputPort, short tag) {
         TrafficSelector.Builder selectorBuilder = DefaultTrafficSelector.builder();
         TrafficSelector selector = selectorBuilder
-                //.matchEthType((short) 0x8847)
+                .matchEthType((short) 0x8100)
                 .matchVlanId(VlanId.vlanId(tag))
                 .build();
         TrafficTreatment.Builder treatmentBuilder = DefaultTrafficTreatment.builder();
@@ -214,6 +214,8 @@ public class OrchestratorApp {
         Host u = chain.getChainHosts().get(
                 (failedIndex + 2) % (chain.length() + 2)); // +2 is for the source and the item after the failed one
 
+        log.debug("removing tags {}",
+                (short)(chain.getFirstTag() + failedIndex));
         System.out.printf("removing tags %s",
                 (short)(chain.getFirstTag() + failedIndex));
 
@@ -221,6 +223,9 @@ public class OrchestratorApp {
 
         System.out.printf("removing tags %s",
                 (short)(chain.getFirstTag() + failedIndex + 1));
+        log.debug("removing tags {}",
+                (short)(chain.getFirstTag() + failedIndex + 1));
+
         removeRules((short)(chain.getFirstTag() + failedIndex + 1));
 
         route(s, t, (short)(chain.getFirstTag() + failedIndex));
@@ -229,12 +234,14 @@ public class OrchestratorApp {
         if (failedIndex == 0 || failedIndex == chain.length() - 1) {
             short tag = (short)(chain.getFirstTag() + chain.length() + 1);
             System.out.printf("removing tag %s", tag);
+            log.debug("removing tags {}", tag);
             removeRules(tag);
             route(chain.getChainHosts().get(chain.getChainHosts().size() - 2),
                   chain.getChainHosts().get(1),
                   tag);
         }//if
         System.out.printf("At the end of reroute!");
+        log.debug("At the end of reroute!");
     }
 
     private void removeRules(short tag) {
@@ -283,25 +290,34 @@ public class OrchestratorApp {
     private void recover(HostEvent hostEvent) {
         // TODO: find the failed host if any, and remove it from replica mapping, replace with new host
         System.out.printf("Recovering...");
+        log.debug("Recovering...");
         boolean found = false;
         try {
 //            HostId hostId = (HostId) deviceEvent.port().element().id();
             HostId hostId = hostEvent.subject().id();
             System.out.printf("Host %s is down\n", hostId);
+            log.debug("Host {} is down", hostId);
+
             System.out.printf("Searching for the failed chain\n");
+            log.debug("Searching for the failed chain");
             for(FaultTolerantChain ch : placedChains) {
                 System.out.printf("Searching for the failed host in chain\n");
+                log.debug("Searching for the failed host in chain");
                 System.out.printf("Replica mapping size: %s\n", ch.replicaMapping.size());
+                log.debug("Replica mapping size: {}", ch.replicaMapping.size());
                 byte j = 0;
                 for(Host host : ch.replicaMapping) {
                     System.out.printf("Check host %s", host.id());
+                    log.debug("Check host {}", host.id());
 
                     if(host.id().equals(hostId)) {
                         System.out.printf("The failed host is found!");
+                        log.debug("The failed host is found!");
 
                         int index = findAvailableHost(ch);
                         Host availableHost = availableHosts.get(index);
                         System.out.printf("Host %s is chosen for recovery", availableHost.id());
+                        log.debug("Host {} is chosen for recovery", availableHost.id());
 
                         ch.replicaMapping.remove(j);
                         ch.replicaMapping.add(j, availableHost);
@@ -322,6 +338,7 @@ public class OrchestratorApp {
             ioExc.printStackTrace();
         }//catch
         System.out.printf("At the end of recovery!");
+        log.debug("At the end of recovery!");
     }
 
     public FaultTolerantChain parse(String srcChainDst, byte f) throws InvalidParameterException {
@@ -388,17 +405,14 @@ public class OrchestratorApp {
         public void event(HostEvent event) {
             System.out.printf("In host event handler!");
             log.debug("In host event handler!");
-            log.error("In host event handler!");
-            log.warn("In host event handler!");
-            System.out.println("In host event handler!");
             switch (event.type()) {
                 case HOST_ADDED:
-                    System.out.printf("Host %s is added!", event.subject());
+                    log.debug("Host {} is added!", event.subject());
                     System.out.printf("Host %s is added!\n", event.subject());
                     break;
 
                 case HOST_REMOVED:
-                    System.out.printf("Host %s is removed!", event.subject());
+                    log.debug("Host {} is removed!", event.subject());
                     System.out.printf("Host %s is removed!\n", event.subject());
                     recover(event);
                     break;
