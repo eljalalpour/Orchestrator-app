@@ -42,6 +42,7 @@ public class Agent {
                     "->CheckIPHeader(18)" +
                     "->FTAppenderElement(1)" +
                     "->VLANDecap" +
+                    "->Queue" +
                     "->CheckIPHeader(14)" +
                     "->se::FTStateElement(ID %d, VLAN_ID %d, F %d)" +
                     "->CheckIPHeader(14)" +
@@ -58,6 +59,7 @@ public class Agent {
                     "FromDevice(p0)" +
                     "->FTFilterElement(%d)" +
                     "->VLANDecap" +
+                    "->Queue" +
                     "->CheckIPHeader(14)" +
                     "->se::FTStateElement(ID %d, VLAN_ID %d, F %d)" +
                     "->MB%d::CounterMB(ID %d)" +
@@ -84,6 +86,7 @@ public class Agent {
                     "FromDevice(p0)" +
                     "->FTFilterElement(%d)" +
                     "->VLANDecap" +
+                    "->Queue" +
                     "->CheckIPHeader(14)" +
                     "->se::FTStateElement(ID %d, VLAN_ID %d, F %d)" +
                     "->CheckIPHeader(14)" +
