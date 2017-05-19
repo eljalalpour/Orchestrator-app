@@ -40,9 +40,8 @@ public class Agent {
                     "FromDevice(p0)" +
                     "->FTFilterElement(%d, %d)" +
                     "->CheckIPHeader(18)" +
-                    "->FTAppenderElement(1)" +
+                    "->FTAppenderElement(%d)" +
                     "->VLANDecap" +
-                    "->Queue" +
                     "->CheckIPHeader(14)" +
                     "->se::FTStateElement(ID %d, VLAN_ID %d, F %d)" +
                     "->CheckIPHeader(14)" +
@@ -51,6 +50,7 @@ public class Agent {
                     "se[1]" +
                     "->VLANEncap(VLAN_ID %d)" +
                     "->VLANEncap(VLAN_ID %d)" +
+                    "->Queue" +
                     "->ToDevice(p0)";
 
     static final String LAST_CLICK_INSTANCE_CONF =
@@ -59,7 +59,6 @@ public class Agent {
                     "FromDevice(p0)" +
                     "->FTFilterElement(%d)" +
                     "->VLANDecap" +
-                    "->Queue" +
                     "->CheckIPHeader(14)" +
                     "->se::FTStateElement(ID %d, VLAN_ID %d, F %d)" +
                     "->MB%d::CounterMB(ID %d)" +
@@ -78,6 +77,7 @@ public class Agent {
                     "->CheckIPHeader(22)" +
                     "->[1]pe;" +
                     "pe" +
+                    "->Queue" +
                     "->ToDevice(p0);";
 
     static final String DEF_CLICK_INSTANCE_CONF =
@@ -86,7 +86,6 @@ public class Agent {
                     "FromDevice(p0)" +
                     "->FTFilterElement(%d)" +
                     "->VLANDecap" +
-                    "->Queue" +
                     "->CheckIPHeader(14)" +
                     "->se::FTStateElement(ID %d, VLAN_ID %d, F %d)" +
                     "->CheckIPHeader(14)" +
@@ -95,6 +94,7 @@ public class Agent {
                     "se[1]" +
                     "->VLANEncap(VLAN_ID %d)" +
                     "->VLANEncap(VLAN_ID %d)" +
+                    "->Queue" +
                     "->ToDevice(p0)";
 
     public static final int CMD_OFFSET = 0;
@@ -137,6 +137,7 @@ public class Agent {
                     CLICK_INS_PORT,
                     firstVlanId + chainPos,
                     firstVlanId + chainLength + 1,
+                    firstVlanId + chainPos,
                     id,
                     firstVlanId + chainPos,
                     failureCount,
