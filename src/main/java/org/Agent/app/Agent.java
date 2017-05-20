@@ -69,12 +69,10 @@ public class Agent {
                     "->be::FTBufferElement" +
                     "->VLANEncap(VLAN_ID %d)" +
                     "->VLANEncap(VLAN_ID %d)" +
-                    "->CheckIPHeader(22)" +
                     "->pe::FTPassElement;" +
                     "be[1]" +
                     "->VLANEncap(VLAN_ID %d)" +
                     "->VLANEncap(VLAN_ID %d)" +
-                    "->CheckIPHeader(22)" +
                     "->[1]pe;" +
                     "pe" +
                     "->Queue" +
