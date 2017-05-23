@@ -366,7 +366,8 @@ public class OrchestratorApp {
             privateToPublicAddresses.put(InetAddress.getByName("192.168.200.14"), InetAddress.getByName("10.12.4.7"));
             privateToPublicAddresses.put(InetAddress.getByName("192.168.200.15"), InetAddress.getByName("10.12.4.6"));
             privateToPublicAddresses.put(InetAddress.getByName("192.168.200.17"), InetAddress.getByName("10.12.4.6"));
-            privateToPublicAddresses.put(InetAddress.getByName("192.168.200.12"), InetAddress.getByName("10.12.4.8"));
+            privateToPublicAddresses.put(InetAddress.getByName("192.168.200.12"), InetAddress.getByName("10.12.4.5"));
+            privateToPublicAddresses.put(InetAddress.getByName("192.168.200.18"), InetAddress.getByName("10.12.4.5"));
 
         }catch (UnknownHostException uhExc){
             uhExc.printStackTrace();
@@ -387,7 +388,7 @@ public class OrchestratorApp {
         hostService.addListener(hostListener);
         System.out.printf("host listener added!");
 
-        deployChain("192.168.200.14,0,1,192.168.200.17", (byte)1);
+        deployChain("192.168.200.1,0,1,192.168.200.17", (byte)1);
     }
 
     @Deactivate

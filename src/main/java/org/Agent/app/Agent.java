@@ -54,6 +54,32 @@ public class Agent {
                     "->Queue" +
                     "->ToDevice(p0)";
 
+//    static final String LAST_CLICK_INSTANCE_CONF =
+//            "require(package \"FTSFC\");" +
+//                    "FTControlElement(%d);" +
+//                    "FromDevice(p0)" +
+//                    "->FTFilterElement(%d)" +
+//                    "->VLANDecap" +
+//                    "->CheckIPHeader(14)" +
+//                    "->se::FTStateElement(ID %d, VLAN_ID %d, F %d)" +
+//                    "->CheckIPHeader(14)" +
+//                    "->MB%d::CounterMB(ID %d)" +
+//                    "->CheckIPHeader(14)" +
+//                    "->[1]se;" +
+//                    "se[1]" +
+//                    "->CheckIPHeader(14)" +
+//                    "->be::FTBufferElement" +
+//                    "->VLANEncap(VLAN_ID %d)" +
+//                    "->VLANEncap(VLAN_ID %d)" +
+//                    "->pe::FTPassElement;" +
+//                    "be[1]" +
+//                    "->VLANEncap(VLAN_ID %d)" +
+//                    "->VLANEncap(VLAN_ID %d)" +
+//                    "->[1]pe;" +
+//                    "pe" +
+//                    "->Queue" +
+//                    "->ToDevice(p0);";
+
     static final String LAST_CLICK_INSTANCE_CONF =
             "require(package \"FTSFC\");" +
                     "FTControlElement(%d);" +
@@ -71,12 +97,10 @@ public class Agent {
                     "->be::FTBufferElement" +
                     "->VLANEncap(VLAN_ID %d)" +
                     "->VLANEncap(VLAN_ID %d)" +
-                    "->pe::FTPassElement;" +
+                    "->ToDump(dst.pcap)" +
                     "be[1]" +
                     "->VLANEncap(VLAN_ID %d)" +
                     "->VLANEncap(VLAN_ID %d)" +
-                    "->[1]pe;" +
-                    "pe" +
                     "->Queue" +
                     "->ToDevice(p0);";
 
