@@ -95,6 +95,7 @@ public class Agent {
                     "se[1]" +
                     "->CheckIPHeader(14)" +
                     "->be::FTBufferElement" +
+                    "->CheckIPHeader(14)"+
                     "->VLANEncap(VLAN_ID %d)" +
                     "->VLANEncap(VLAN_ID %d)" +
                     "->ToDump(dst.pcap);" +
