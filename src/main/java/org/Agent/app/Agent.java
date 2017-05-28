@@ -97,7 +97,7 @@ public class Agent {
                     "->be::FTBufferElement" +
                     "->VLANEncap(VLAN_ID %d)" +
                     "->VLANEncap(VLAN_ID %d)" +
-                    "->ToDump(dst.pcap)" +
+                    "->ToDump(dst.pcap);" +
                     "be[1]" +
                     "->VLANEncap(VLAN_ID %d)" +
                     "->VLANEncap(VLAN_ID %d)" +
