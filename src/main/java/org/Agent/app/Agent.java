@@ -415,6 +415,18 @@ public class Agent {
 //
 //        return states;
 //    }
+    public static void killMiddlebox() {
+        ArrayList<String> commands = new ArrayList<>();
+        commands.add("sudo");
+        commands.add("killall");
+        commands.add("click");
+        ProcessBuilder processBuilder = new ProcessBuilder(commands);
+        try {
+            Process p = processBuilder.start();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     public static void main (String args[]) {
 //        InetAddress ipAddr;
@@ -474,6 +486,9 @@ public class Agent {
                                 out.write(states, 0, states.length);
                                 out.flush();
                                 break;
+                            case Commands.KILL_MIDDLEBOX:
+                                System.out.println("Received kill middlebox command\n");
+                                killMiddlebox();
 
                             default:
                                 //TODO: Appropriate action when the command is not known

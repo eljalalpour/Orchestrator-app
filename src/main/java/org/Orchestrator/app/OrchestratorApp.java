@@ -314,6 +314,9 @@ public class OrchestratorApp {
                         System.out.printf("The failed host is found!");
                         log.debug("The failed host is found!");
 
+                        InetAddress inetAddress = hostService.getHost(hostId).ipAddresses().iterator().next().toInetAddress();
+                        init(Commands.KILL_MIDDLEBOX, ch.getMB(j), privateToPublicAddresses.get(inetAddress), j, ch.getFirstTag(), ch);
+
                         int index = findAvailableHost(ch);
                         Host availableHost = availableHosts.get(index);
                         System.out.printf("Host %s is chosen for recovery", availableHost.id());

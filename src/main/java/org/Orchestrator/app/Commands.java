@@ -31,6 +31,8 @@ public class Commands {
     // Used to put the state to the click instance
     public static final byte PUT_STATE = 0x03;
 
+    public static final byte KILL_MIDDLEBOX = 0x04;
+
     /**
      * Creating the byte stream of a get-state-command
      * @param middlebox The type of the middlebox
@@ -76,6 +78,7 @@ public class Commands {
         }//if
         return buffer.array();
     }
+
 
     /**
      * The format of the message is as follows
