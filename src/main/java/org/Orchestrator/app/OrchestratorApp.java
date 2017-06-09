@@ -371,23 +371,15 @@ public class OrchestratorApp {
     protected void activate() {
         privateToPublicAddresses = new HashMap<>();
         try {
-//            privateToPublicAddresses.put(InetAddress.getByName("192.168.200.11"), InetAddress.getByName("10.12.4.11"));
-//            privateToPublicAddresses.put(InetAddress.getByName("192.168.200.10"), InetAddress.getByName("10.12.4.3"));
-//            //privateToPublicAddresses.put(InetAddress.getByName("192.168.200.15"), InetAddress.getByName("10.12.4.6"));
-//            privateToPublicAddresses.put(InetAddress.getByName("192.168.200.17"), InetAddress.getByName("10.12.4.3"));
-//            privateToPublicAddresses.put(InetAddress.getByName("192.168.200.12"), InetAddress.getByName("10.12.4.10"));
-//            privateToPublicAddresses.put(InetAddress.getByName("192.168.200.18"), InetAddress.getByName("10.12.4.3"));
-
-            privateToPublicAddresses.put(InetAddress.getByName("192.168.201.17"), InetAddress.getByName("10.12.4.15"));
-            privateToPublicAddresses.put(InetAddress.getByName("192.168.201.18"), InetAddress.getByName("10.12.4.15"));
-            privateToPublicAddresses.put(InetAddress.getByName("192.168.201.4"), InetAddress.getByName("10.12.4.16"));
-            privateToPublicAddresses.put(InetAddress.getByName("192.168.201.6"), InetAddress.getByName("10.12.4.17"));
-            privateToPublicAddresses.put(InetAddress.getByName("192.168.201.7"), InetAddress.getByName("10.12.4.18"));
-            privateToPublicAddresses.put(InetAddress.getByName("192.168.201.5"), InetAddress.getByName("10.12.4.19"));
-            privateToPublicAddresses.put(InetAddress.getByName("192.168.201.8"), InetAddress.getByName("10.12.4.20"));
-            privateToPublicAddresses.put(InetAddress.getByName("192.168.201.9"), InetAddress.getByName("10.12.4.21"));
-            privateToPublicAddresses.put(InetAddress.getByName("192.168.201.10"), InetAddress.getByName("10.12.4.13"));
-            privateToPublicAddresses.put(InetAddress.getByName("192.168.201.11"), InetAddress.getByName("10.12.4.14"));
+            privateToPublicAddresses.put(InetAddress.getByName("192.168.200.1"), InetAddress.getByName("10.12.4.9"));
+            privateToPublicAddresses.put(InetAddress.getByName("192.168.200.2"), InetAddress.getByName("10.12.4.15"));
+            privateToPublicAddresses.put(InetAddress.getByName("192.168.200.3"), InetAddress.getByName("10.12.4.14"));
+            privateToPublicAddresses.put(InetAddress.getByName("192.168.200.4"), InetAddress.getByName("10.12.4.13"));
+            privateToPublicAddresses.put(InetAddress.getByName("192.168.200.5"), InetAddress.getByName("10.12.4.12"));
+            privateToPublicAddresses.put(InetAddress.getByName("192.168.200.6"), InetAddress.getByName("10.12.4.11"));
+            privateToPublicAddresses.put(InetAddress.getByName("192.168.200.7"), InetAddress.getByName("10.12.4.17"));
+            privateToPublicAddresses.put(InetAddress.getByName("192.168.200.8"), InetAddress.getByName("10.12.4.16"));
+            privateToPublicAddresses.put(InetAddress.getByName("192.168.200.9"), InetAddress.getByName("10.12.4.16"));
 
         }catch (UnknownHostException uhExc){
             uhExc.printStackTrace();
@@ -402,7 +394,7 @@ public class OrchestratorApp {
                 privateToPublicAddresses.get(host.ipAddresses().iterator().next().toInetAddress());
                 availableHosts.add(host);
             }//try
-            catch(NoSuchElementException e) {}//catch
+            catch(NoSuchElementException e) { }//catch
         }//for
 
 
@@ -412,7 +404,7 @@ public class OrchestratorApp {
         hostService.addListener(hostListener);
         log.info("host listener added!");
 
-        deployChain("192.168.201.17,0,1,192.168.201.18", (byte)1);
+        deployChain("192.168.200.8,0,1,192.168.200.9", (byte)1);
     }
 
     @Deactivate
