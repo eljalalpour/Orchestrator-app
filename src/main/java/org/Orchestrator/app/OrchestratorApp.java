@@ -101,9 +101,9 @@ public class OrchestratorApp {
         for (byte i = 0; i < chain.length(); ++i) {
             int index = findAvailableHost(chain);
             Host host = availableHosts.get(index);
-            System.out.printf("Host %s is chosen for the placement of MB %s", host.id(), i);
+            log.info("Host {} is chosen for the placement of MB {}", host.id(), i);
             Ip4Address ip = host.ipAddresses().iterator().next().getIp4Address();
-            System.out.printf("Init command is sent to IP address %s", privateToPublicAddresses.get(ip.toInetAddress()));
+            log.info("Init command is sent to IP address {}", privateToPublicAddresses.get(ip.toInetAddress()));
             init(Commands.MB_INIT, chain.getMB(i), privateToPublicAddresses.get(ip.toInetAddress()), i, chain.getFirstTag(), chain);
             chain.replicaMapping.add(host);
             availableHosts.remove(index);
@@ -123,7 +123,7 @@ public class OrchestratorApp {
 
     private void route(FaultTolerantChain chain){
         // We assume that an IP address is assigned to a single host
-        System.out.printf("Routing");
+        log.info("Routing");
         for(byte i = 0; i < chain.getChainHosts().size() - 1; ++i) {
             Host s = chain.getChainHosts().get(i);
             Host t = chain.getChainHosts().get(i + 1);
@@ -137,7 +137,7 @@ public class OrchestratorApp {
     }
 
     private void route(Host s, Host t, short tag) {
-        System.out.printf("Routing between the source %s and the target %s", s, t);
+        log.info("Routing between the source {} and the target {}", s, t);
         ArrayList<FlowRule> flowRules = new ArrayList<>();
         try {
             for (ConnectPoint cp: findPath(s, t)) {
@@ -146,7 +146,7 @@ public class OrchestratorApp {
                 flowRules.add(flowRule);
             }//for
             tagFlows.put(tag, flowRules);
-            System.out.printf("adding tag %s", tag);
+            log.info("adding tag {}", tag);
         }//try
         catch(NoSuchElementException nseExc) {
             nseExc.printStackTrace();
@@ -214,16 +214,16 @@ public class OrchestratorApp {
         Host u = chain.getChainHosts().get(
                 (failedIndex + 2) % (chain.length() + 2)); // +2 is for the source and the item after the failed one
 
-        log.debug("removing tags {}",
+        log.info("removing tags {}",
                 (short)(chain.getFirstTag() + failedIndex));
-        System.out.printf("removing tags %s",
+        log.info("removing tags {}",
                 (short)(chain.getFirstTag() + failedIndex));
 
         removeRules((short)(chain.getFirstTag() + failedIndex));
 
-        System.out.printf("removing tags %s",
+        log.info("removing tags {}",
                 (short)(chain.getFirstTag() + failedIndex + 1));
-        log.debug("removing tags {}",
+        log.info("removing tags {}",
                 (short)(chain.getFirstTag() + failedIndex + 1));
 
         removeRules((short)(chain.getFirstTag() + failedIndex + 1));
@@ -233,15 +233,15 @@ public class OrchestratorApp {
 
         if (failedIndex == 0 || failedIndex == chain.length() - 1) {
             short tag = (short)(chain.getFirstTag() + chain.length() + 1);
-            System.out.printf("removing tag %s", tag);
-            log.debug("removing tags {}", tag);
+            log.info("removing tag {}", tag);
+            log.info("removing tags {}", tag);
             removeRules(tag);
             route(chain.getChainHosts().get(chain.getChainHosts().size() - 2),
                   chain.getChainHosts().get(1),
                   tag);
         }//if
-        System.out.printf("At the end of reroute!");
-        log.debug("At the end of reroute!");
+        log.info("At the end of reroute!");
+        log.info("At the end of reroute!");
     }
 
     private void removeRules(short tag) {
@@ -289,38 +289,44 @@ public class OrchestratorApp {
 
     private void recover(HostEvent hostEvent) {
         // TODO: find the failed host if any, and remove it from replica mapping, replace with new host
-        System.out.printf("Recovering...");
-        log.debug("Recovering...");
+        log.info("Recovering...");
+        log.info("Recovering...");
         boolean found = false;
         try {
 //            HostId hostId = (HostId) deviceEvent.port().element().id();
             HostId hostId = hostEvent.subject().id();
-            System.out.printf("Host %s is down\n", hostId);
-            log.debug("Host {} is down", hostId);
+            log.info("Host {} is down\n", hostId);
+            log.info("Host {} is down", hostId);
 
-            System.out.printf("Searching for the failed chain\n");
-            log.debug("Searching for the failed chain");
+            log.info("Searching for the failed chain\n");
+            log.info("Searching for the failed chain");
             for(FaultTolerantChain ch : placedChains) {
-                System.out.printf("Searching for the failed host in chain\n");
-                log.debug("Searching for the failed host in chain");
-                System.out.printf("Replica mapping size: %s\n", ch.replicaMapping.size());
-                log.debug("Replica mapping size: {}", ch.replicaMapping.size());
+                log.info("Searching for the failed host in chain\n");
+                log.info("Searching for the failed host in chain");
+                log.info("Replica mapping size: {}\n", ch.replicaMapping.size());
+                log.info("Replica mapping size: {}", ch.replicaMapping.size());
                 byte j = 0;
                 for(Host host : ch.replicaMapping) {
-                    System.out.printf("Check host %s", host.id());
-                    log.debug("Check host {}", host.id());
+                    log.info("Check host {}", host.id());
+                    log.info("Check host {}", host.id());
 
                     if(host.id().equals(hostId)) {
-                        System.out.printf("The failed host is found!");
-                        log.debug("The failed host is found!");
+                        log.info("The failed host is found!");
+                        log.info("The failed host is found!");
 
-                        InetAddress inetAddress = hostService.getHost(hostId).ipAddresses().iterator().next().toInetAddress();
-                        init(Commands.KILL_MIDDLEBOX, ch.getMB(j), privateToPublicAddresses.get(inetAddress), j, ch.getFirstTag(), ch);
+
+
+
+                        ch.getMB(j);
+                        hostEvent.subject().ipAddresses().iterator().next().toInetAddress();
+                        privateToPublicAddresses.get(hostEvent.subject().ipAddresses().iterator().next().toInetAddress());
+                        ch.getFirstTag();
+                        init(Commands.KILL_MIDDLEBOX, ch.getMB(j), privateToPublicAddresses.get(hostEvent.subject().ipAddresses().iterator().next().toInetAddress()), j, ch.getFirstTag(), ch);
 
                         int index = findAvailableHost(ch);
                         Host availableHost = availableHosts.get(index);
-                        System.out.printf("Host %s is chosen for recovery", availableHost.id());
-                        log.debug("Host {} is chosen for recovery", availableHost.id());
+                        log.info("Host {} is chosen for recovery", availableHost.id());
+                        log.info("Host {} is chosen for recovery", availableHost.id());
 
                         ch.replicaMapping.remove(j);
                         ch.replicaMapping.add(j, availableHost);
@@ -340,8 +346,8 @@ public class OrchestratorApp {
         catch(IOException ioExc) {
             ioExc.printStackTrace();
         }//catch
-        System.out.printf("At the end of recovery!");
-        log.debug("At the end of recovery!");
+        log.info("At the end of recovery!");
+        log.info("At the end of recovery!");
     }
 
     public FaultTolerantChain parse(String srcChainDst, byte f) throws InvalidParameterException {
@@ -365,12 +371,23 @@ public class OrchestratorApp {
     protected void activate() {
         privateToPublicAddresses = new HashMap<>();
         try {
-            privateToPublicAddresses.put(InetAddress.getByName("192.168.200.11"), InetAddress.getByName("10.12.4.11"));
-            privateToPublicAddresses.put(InetAddress.getByName("192.168.200.10"), InetAddress.getByName("10.12.4.3"));
-            //privateToPublicAddresses.put(InetAddress.getByName("192.168.200.15"), InetAddress.getByName("10.12.4.6"));
-            privateToPublicAddresses.put(InetAddress.getByName("192.168.200.17"), InetAddress.getByName("10.12.4.3"));
-            privateToPublicAddresses.put(InetAddress.getByName("192.168.200.12"), InetAddress.getByName("10.12.4.10"));
-            privateToPublicAddresses.put(InetAddress.getByName("192.168.200.18"), InetAddress.getByName("10.12.4.3"));
+//            privateToPublicAddresses.put(InetAddress.getByName("192.168.200.11"), InetAddress.getByName("10.12.4.11"));
+//            privateToPublicAddresses.put(InetAddress.getByName("192.168.200.10"), InetAddress.getByName("10.12.4.3"));
+//            //privateToPublicAddresses.put(InetAddress.getByName("192.168.200.15"), InetAddress.getByName("10.12.4.6"));
+//            privateToPublicAddresses.put(InetAddress.getByName("192.168.200.17"), InetAddress.getByName("10.12.4.3"));
+//            privateToPublicAddresses.put(InetAddress.getByName("192.168.200.12"), InetAddress.getByName("10.12.4.10"));
+//            privateToPublicAddresses.put(InetAddress.getByName("192.168.200.18"), InetAddress.getByName("10.12.4.3"));
+
+            privateToPublicAddresses.put(InetAddress.getByName("192.168.201.17"), InetAddress.getByName("10.12.4.15"));
+            privateToPublicAddresses.put(InetAddress.getByName("192.168.201.18"), InetAddress.getByName("10.12.4.15"));
+            privateToPublicAddresses.put(InetAddress.getByName("192.168.201.4"), InetAddress.getByName("10.12.4.16"));
+            privateToPublicAddresses.put(InetAddress.getByName("192.168.201.6"), InetAddress.getByName("10.12.4.17"));
+            privateToPublicAddresses.put(InetAddress.getByName("192.168.201.7"), InetAddress.getByName("10.12.4.18"));
+            privateToPublicAddresses.put(InetAddress.getByName("192.168.201.5"), InetAddress.getByName("10.12.4.19"));
+            privateToPublicAddresses.put(InetAddress.getByName("192.168.201.8"), InetAddress.getByName("10.12.4.20"));
+            privateToPublicAddresses.put(InetAddress.getByName("192.168.201.9"), InetAddress.getByName("10.12.4.21"));
+            privateToPublicAddresses.put(InetAddress.getByName("192.168.201.10"), InetAddress.getByName("10.12.4.13"));
+            privateToPublicAddresses.put(InetAddress.getByName("192.168.201.11"), InetAddress.getByName("10.12.4.14"));
 
         }catch (UnknownHostException uhExc){
             uhExc.printStackTrace();
@@ -380,24 +397,28 @@ public class OrchestratorApp {
 
         for (Iterator<Host> h = hostService.getHosts().iterator(); h.hasNext(); /*empty*/) {
             Host host = h.next();
-            System.out.printf("Host %s is available!", host);
-            availableHosts.add(host);
-
+            log.info("Host {} is available!", host);
+            try {
+                privateToPublicAddresses.get(host.ipAddresses().iterator().next().toInetAddress());
+                availableHosts.add(host);
+            }//try
+            catch(NoSuchElementException e) {}//catch
         }//for
+
 
         tagFlows = new HashMap<>();
 
         // Listen for failures
         hostService.addListener(hostListener);
-        System.out.printf("host listener added!");
+        log.info("host listener added!");
 
-        deployChain("192.168.200.17,0,1,192.168.200.18", (byte)1);
+        deployChain("192.168.201.17,0,1,192.168.201.18", (byte)1);
     }
 
     @Deactivate
     protected void deactivate()
     {
-        System.out.printf("Stopped");
+        log.info("Stopped");
         flowRuleService.removeFlowRulesById(appId);
     }
 
@@ -407,17 +428,17 @@ public class OrchestratorApp {
     private class InnerHostListener implements HostListener {
         @Override
         public void event(HostEvent event) {
-            System.out.printf("In host event handler!");
-            log.debug("In host event handler!");
+            log.info("In host event handler!");
+            log.info("In host event handler!");
             switch (event.type()) {
                 case HOST_ADDED:
-                    log.debug("Host {} is added!", event.subject());
-                    System.out.printf("Host %s is added!\n", event.subject());
+                    log.info("Host {} is added!", event.subject());
+                    log.info("Host {} is added!\n", event.subject());
                     break;
 
                 case HOST_REMOVED:
-                    log.debug("Host {} is removed!", event.subject());
-                    System.out.printf("Host %s is removed!\n", event.subject());
+                    log.info("Host {} is removed!", event.subject());
+                    log.info("Host {} is removed!\n", event.subject());
                     recover(event);
                     break;
 

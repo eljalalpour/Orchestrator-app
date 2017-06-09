@@ -275,7 +275,11 @@ public class Agent {
         if (fetchState) {
             // Find the position of this replica in the chain
 //            FaultTolerantChain chain = Commands.parseChainFromInitCommand(bytes);
-            ArrayList<InetAddress> ip4Addresses = Commands.parseIpAddresses(bytes);
+            ArrayList<InetAddress> inetAddresses = Commands.parseIpAddresses(bytes);
+
+            for (int i = 0; i < inetAddresses.size(); ++i)
+                System.out.printf(inetAddresses.get(i).toString());
+
             byte chainPos = Commands.parseChainPosFromInitCommand(bytes);
 //            for (byte i = 0; i < ipAddrs.size(); ++i) {
 //                if (ipAddrs.get(i).equals(ipAddr)) {
@@ -302,7 +306,7 @@ public class Agent {
                 for (byte i = 0; i < whoToAsk.length; ++i) {
                     if (successes[i]) continue;
 
-                    threads[i] = new FetchStateThread(ip4Addresses.get(whoToAsk[i]),
+                    threads[i] = new FetchStateThread(inetAddresses.get(whoToAsk[i]),
                             DEFAULT_AGENT_PORT, (byte)((chainPos -f + i) % n));
                     threads[i].start();
                 }//for
