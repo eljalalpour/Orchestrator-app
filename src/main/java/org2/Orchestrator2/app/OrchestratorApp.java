@@ -1,4 +1,4 @@
-package org.Orchestrator.app;
+package org2.Orchestrator2.app;
 
 import org.apache.felix.scr.annotations.*;
 import org.onlab.packet.Ip4Address;
@@ -6,6 +6,8 @@ import org.onlab.packet.VlanId;
 import org.onosproject.app.ApplicationService;
 import org.onosproject.core.ApplicationId;
 import org.onosproject.net.*;
+import org.onosproject.net.device.DeviceEvent;
+import org.onosproject.net.device.DeviceListener;
 import org.onosproject.net.device.DeviceService;
 import org.onosproject.net.flow.*;
 import org.onosproject.net.host.*;
@@ -25,7 +27,7 @@ import static org.onlab.util.Tools.toHex;
 public class OrchestratorApp {
     private static final int AGENT_PORT = 2222;
     private static final int FORWARD_PRIORITY = 15;
-    private static byte tag = 5;
+    private static byte tag = 10;
     public static final String DELIM = ",";
     private static final int MIN_SRC_CHAIN_DST_LEN = 3;
 
@@ -56,7 +58,11 @@ public class OrchestratorApp {
 
     private HashMap<InetAddress, InetAddress> privateToPublicAddresses;
 
-    private HostListener hostListener = new InnerHostListener();
+    private HashMap<Device, Host> hostToDevice;
+
+//    private HostListener hostListener = new InnerHostListener();
+    private DeviceListener deviceListener = new InnerDeviceListener();
+
 
 //    private DeviceListener deviceListener = new InnerDeviceistener();
 //
@@ -95,6 +101,7 @@ public class OrchestratorApp {
         //TODO: if we can deploy at source and destination, then we should check only the availableHosts.size()
         //if (chain.length() > availableHosts.size()) {
         if (chain.length() > availableHosts.size() - 2) {
+            log.info("not enough hosts!");
             throw new Exception("not enough available hosts");
         }//if
 
@@ -287,65 +294,65 @@ public class OrchestratorApp {
 //        }//catch
     }
 
-    private void recover(HostEvent hostEvent) {
+    private void recover(DeviceEvent deviceEvent) {
         // TODO: find the failed host if any, and remove it from replica mapping, replace with new host
         log.info("Recovering...");
         log.info("Recovering...");
-        boolean found = false;
-        try {
-//            HostId hostId = (HostId) deviceEvent.port().element().id();
-            HostId hostId = hostEvent.subject().id();
-            log.info("Host {} is down\n", hostId);
-            log.info("Host {} is down", hostId);
+        Host host = hostToDevice.get(deviceService.getDevice(deviceEvent.subject().id()));
+        if (host != null) {
+            boolean found = false;
+            try {
+                log.info("Host {} is down\n", host);
+                log.info("Host {} is down", host);
 
-            log.info("Searching for the failed chain\n");
-            log.info("Searching for the failed chain");
-            for(FaultTolerantChain ch : placedChains) {
-                log.info("Searching for the failed host in chain\n");
-                log.info("Searching for the failed host in chain");
-                log.info("Replica mapping size: {}\n", ch.replicaMapping.size());
-                log.info("Replica mapping size: {}", ch.replicaMapping.size());
-                byte j = 0;
-                for(Host host : ch.replicaMapping) {
-                    log.info("Check host {}", host.id());
-                    log.info("Check host {}", host.id());
+                log.info("Searching for the failed chain\n");
+                log.info("Searching for the failed chain");
+                for (FaultTolerantChain ch : placedChains) {
+                    log.info("Searching for the failed host in chain\n");
+                    log.info("Searching for the failed host in chain");
+                    log.info("Replica mapping size: {}\n", ch.replicaMapping.size());
+                    log.info("Replica mapping size: {}", ch.replicaMapping.size());
+                    byte j = 0;
+                    for (Host host1 : ch.replicaMapping) {
+                        log.info("Check host {}", host1.id());
+                        log.info("Check host {}", host1.id());
 
-                    if(host.id().equals(hostId)) {
-                        log.info("The failed host is found!");
-                        log.info("The failed host is found!");
-
-
+                        if (host1.equals(host)) {
+                            log.info("The failed host is found!");
+                            log.info("The failed host is found!");
 
 
-                        ch.getMB(j);
-                        hostEvent.subject().ipAddresses().iterator().next().toInetAddress();
-                        privateToPublicAddresses.get(hostEvent.subject().ipAddresses().iterator().next().toInetAddress());
-                        ch.getFirstTag();
-                        init(Commands.KILL_MIDDLEBOX, ch.getMB(j), privateToPublicAddresses.get(hostEvent.subject().ipAddresses().iterator().next().toInetAddress()), j, ch.getFirstTag(), ch);
+                            ch.getMB(j);
+                            host.ipAddresses().iterator().next().toInetAddress();
+                            privateToPublicAddresses.get(host.ipAddresses().iterator().next().toInetAddress());
+                            ch.getFirstTag();
+                            init(Commands.KILL_MIDDLEBOX, ch.getMB(j), privateToPublicAddresses.get(host.ipAddresses().iterator().next().toInetAddress()), j, ch.getFirstTag(), ch);
 
-                        int index = findAvailableHost(ch);
-                        Host availableHost = availableHosts.get(index);
-                        log.info("Host {} is chosen for recovery", availableHost.id());
-                        log.info("Host {} is chosen for recovery", availableHost.id());
+                            int index = findAvailableHost(ch);
+                            Host availableHost = availableHosts.get(index);
+                            log.info("Host {} is chosen for recovery", availableHost.id());
+                            log.info("Host {} is chosen for recovery", availableHost.id());
 
-                        ch.replicaMapping.remove(j);
-                        ch.replicaMapping.add(j, availableHost);
-                        init(Commands.MB_INIT_AND_FETCH_STATE, ch.getMB(j),
-                                privateToPublicAddresses.get(availableHost.ipAddresses().iterator().next().toInetAddress())
-                                , j, ch.getFirstTag(), ch);
-                        availableHosts.remove(index);
-                        reroute(ch, j);
-                        found = true;
-                        break;
-                    }//if
-                    ++j;
+                            ch.replicaMapping.remove(j);
+                            ch.replicaMapping.add(j, availableHost);
+                            init(Commands.MB_INIT_AND_FETCH_STATE, ch.getMB(j),
+                                    privateToPublicAddresses.get(availableHost.ipAddresses().iterator().next().toInetAddress())
+                                    , j, ch.getFirstTag(), ch);
+                            availableHosts.remove(index);
+                            reroute(ch, j);
+                            found = true;
+                            break;
+                        }//if
+                        ++j;
+                    }//for
+                    if (found) break;
                 }//for
-                if (found) break;
-            }//for
-        }//try
-        catch(IOException ioExc) {
-            ioExc.printStackTrace();
-        }//catch
+
+            }//try
+            catch (IOException ioExc) {
+                ioExc.printStackTrace();
+            }//catch
+        }
         log.info("At the end of recovery!");
         log.info("At the end of recovery!");
     }
@@ -370,41 +377,55 @@ public class OrchestratorApp {
     @Activate
     protected void activate() {
         privateToPublicAddresses = new HashMap<>();
+        hostToDevice = new HashMap<>();
         try {
-            privateToPublicAddresses.put(InetAddress.getByName("192.168.200.1"), InetAddress.getByName("10.12.4.9"));
-            privateToPublicAddresses.put(InetAddress.getByName("192.168.200.2"), InetAddress.getByName("10.12.4.15"));
-            privateToPublicAddresses.put(InetAddress.getByName("192.168.200.3"), InetAddress.getByName("10.12.4.14"));
-            privateToPublicAddresses.put(InetAddress.getByName("192.168.200.4"), InetAddress.getByName("10.12.4.13"));
-            privateToPublicAddresses.put(InetAddress.getByName("192.168.200.5"), InetAddress.getByName("10.12.4.12"));
-            privateToPublicAddresses.put(InetAddress.getByName("192.168.200.6"), InetAddress.getByName("10.12.4.11"));
-            privateToPublicAddresses.put(InetAddress.getByName("192.168.200.7"), InetAddress.getByName("10.12.4.17"));
-            privateToPublicAddresses.put(InetAddress.getByName("192.168.200.8"), InetAddress.getByName("10.12.4.16"));
-            privateToPublicAddresses.put(InetAddress.getByName("192.168.200.9"), InetAddress.getByName("10.12.4.16"));
+//            //privateToPublicAddresses.put(InetAddress.getByName("192.168.200.1"), InetAddress.getByName("10.12.4.9"));
+//            privateToPublicAddresses.put(InetAddress.getByName("192.168.200.2"), InetAddress.getByName("10.12.4.15"));
+//            //privateToPublicAddresses.put(InetAddress.getByName("192.168.200.3"), InetAddress.getByName("10.12.4.14"));
+//            //privateToPublicAddresses.put(InetAddress.getByName("192.168.200.4"), InetAddress.getByName("10.12.4.13"));
+//            privateToPublicAddresses.put(InetAddress.getByName("192.168.200.5"), InetAddress.getByName("10.12.4.12"));
+//            //privateToPublicAddresses.put(InetAddress.getByName("192.168.200.6"), InetAddress.getByName("10.12.4.11"));
+//            privateToPublicAddresses.put(InetAddress.getByName("192.168.200.7"), InetAddress.getByName("10.12.4.17"));
+//            //privateToPublicAddresses.put(InetAddress.getByName("192.168.200.8"), InetAddress.getByName("10.12.4.16"));
+//            //privateToPublicAddresses.put(InetAddress.getByName("192.168.200.9"), InetAddress.getByName("10.12.4.16"));
+//
+//            privateToPublicAddresses.put(InetAddress.getByName("192.168.200.10"), InetAddress.getByName("10.12.4.11"));
+//            privateToPublicAddresses.put(InetAddress.getByName("192.168.200.11"), InetAddress.getByName("10.12.4.11"));
+
+            privateToPublicAddresses.put(InetAddress.getByName("192.168.201.3"), InetAddress.getByName("10.12.4.20"));
+            privateToPublicAddresses.put(InetAddress.getByName("192.168.201.4"), InetAddress.getByName("10.12.4.21"));
+            privateToPublicAddresses.put(InetAddress.getByName("192.168.201.2"), InetAddress.getByName("10.12.4.22"));
+            privateToPublicAddresses.put(InetAddress.getByName("192.168.201.17"), InetAddress.getByName("10.12.4.19"));
+            privateToPublicAddresses.put(InetAddress.getByName("192.168.201.18"), InetAddress.getByName("10.12.4.19"));
 
         }catch (UnknownHostException uhExc){
             uhExc.printStackTrace();
         }
-        this.appId = applicationService.getId("org.orchestrator.app");
+        this.appId = applicationService.getId("org.orchestrator2.app");
         availableHosts = new ArrayList<>();
 
         for (Iterator<Host> h = hostService.getHosts().iterator(); h.hasNext(); /*empty*/) {
-            Host host = h.next();
-            log.info("Host {} is available!", host);
             try {
-                privateToPublicAddresses.get(host.ipAddresses().iterator().next().toInetAddress());
-                availableHosts.add(host);
-            }//try
-            catch(NoSuchElementException e) { }//catch
+                Host host = h.next();
+                InetAddress ii = privateToPublicAddresses.get(host.ipAddresses().iterator().next().toInetAddress());
+                if (ii != null) {
+                    availableHosts.add(host);
+                    log.info("Host {} is available!", host);
+                    hostToDevice.put(deviceService.getDevice(host.location().deviceId()), host);
+                }
+            } catch (NoSuchElementException nse){ }
         }//for
 
+        log.info("this is the size of available hosts {}", availableHosts.size());
 
         tagFlows = new HashMap<>();
 
         // Listen for failures
-        hostService.addListener(hostListener);
+//        hostService.addListener(hostListener);
+        deviceService.addListener(deviceListener);
         log.info("host listener added!");
 
-        deployChain("192.168.200.8,0,1,192.168.200.9", (byte)1);
+        deployChain("192.168.201.17,1,2,192.168.201.18", (byte)1);
     }
 
     @Deactivate
@@ -414,23 +435,50 @@ public class OrchestratorApp {
         flowRuleService.removeFlowRulesById(appId);
     }
 
-    /**
-     * Inner Device Event Listener class.
-     */
-    private class InnerHostListener implements HostListener {
-        @Override
-        public void event(HostEvent event) {
-            log.info("In host event handler!");
-            log.info("In host event handler!");
-            switch (event.type()) {
-                case HOST_ADDED:
-                    log.info("Host {} is added!", event.subject());
-                    log.info("Host {} is added!\n", event.subject());
-                    break;
+//    /**
+//     * Inner Device Event Listener class.
+//     */
+//    private class InnerHostListener implements HostListener {
+//        @Override
+//        public void event(HostEvent event) {
+//            log.info("In host event handler!");
+//            log.info("In host event handler!");
+//            switch (event.type()) {
+//                case HOST_ADDED:
+//                    log.info("Host {} is added!", event.subject());
+//                    log.info("Host {} is added!\n", event.subject());
+//                    break;
+//
+//                case HOST_REMOVED:
+//                    log.info("Host {} is removed!", event.subject());
+//                    log.info("Host {} is removed!\n", event.subject());
+//                    recover(event);
+//                    break;
+//
+//                default:
+//                    break;
+//            }//switch
+//        }
+//    }
 
-                case HOST_REMOVED:
-                    log.info("Host {} is removed!", event.subject());
-                    log.info("Host {} is removed!\n", event.subject());
+    private class InnerDeviceListener implements DeviceListener {
+        @Override
+        public void event(DeviceEvent event) {
+            switch (event.type()) {
+                case PORT_ADDED:
+                    log.info("Port {} is added!", event.subject());
+                    log.info("Port {} is added!\n", event.subject());
+                    break;
+//                case PORT_STATS_UPDATED:
+//                    if(!event.port().isEnabled()) {
+//                        log.info("Port {} is down!", event.subject());
+//                        log.info("Port {} is down!\n", event.subject());
+//                        recover(event);
+//                    }
+//                    break;
+                case PORT_REMOVED:
+                    log.info("Port {} is removed!", event.subject());
+                    log.info("Port {} is removed!\n", event.subject());
                     recover(event);
                     break;
 

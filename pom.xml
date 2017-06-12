@@ -17,8 +17,8 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.Orchestrator.app</groupId>
-    <artifactId>Orchestrator-app</artifactId>
+    <groupId>org.orchestrator2.app</groupId>
+    <artifactId>Orchestrator2-app</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
@@ -28,9 +28,9 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <onos.version>1.9.0</onos.version>
-        <onos.app.name>org.orchestrator.app</onos.app.name>
-        <onos.app.title>Orchestrator App</onos.app.title>
-        <onos.app.origin>Orchestrator, Inc.</onos.app.origin>
+        <onos.app.name>org.orchestrator2.app</onos.app.name>
+        <onos.app.title>Orchestrator2 App</onos.app.title>
+        <onos.app.origin>Orchestrator2, Inc.</onos.app.origin>
         <onos.app.category>default</onos.app.category>
         <onos.app.url>http://onosproject.org</onos.app.url>
         <onos.app.readme>ONOS OSGi bundle archetype.</onos.app.readme>
