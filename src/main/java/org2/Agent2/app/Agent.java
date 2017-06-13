@@ -34,7 +34,7 @@ class StreamGobbler extends Thread {
 
 
 public class Agent {
-    static final String RECOVERY_LOG_FILE = "recovery.agent.txt";
+    static final String RECOVERY_LOG_FILE = "/home/ubuntu/experiments/recovery.agent.txt";
     static final int DEFAULT_AGENT_PORT = 2222;
     static final int CLICK_INS_PORT = 10001;
     static Socket clientSocket = null;
@@ -356,8 +356,9 @@ public class Agent {
             afterFetch = System.nanoTime();
 
             try {
-                String str = Agent.writeToFile(RECOVERY_LOG_FILE, start, end, beforeInit, afterInit, beforeFetch, afterFetch);
+                String str = getLogString(RECOVERY_LOG_FILE, start, end, beforeInit, afterInit, beforeFetch, afterFetch);
                 System.out.println(str);
+                Agent.writeToFile(RECOVERY_LOG_FILE, start, end, beforeInit, afterInit, beforeFetch, afterFetch);
             }//try
             catch(IOException exc) { }//catch
         }//if
