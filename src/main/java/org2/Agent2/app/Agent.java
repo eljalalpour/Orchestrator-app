@@ -356,7 +356,8 @@ public class Agent {
             afterFetch = System.nanoTime();
 
             try {
-                Agent.writeToFile(RECOVERY_LOG_FILE, start, end, beforeInit, afterInit, beforeFetch, afterFetch);
+                String str = Agent.writeToFile(RECOVERY_LOG_FILE, start, end, beforeInit, afterInit, beforeFetch, afterFetch);
+                System.out.println(str);
             }//try
             catch(IOException exc) { }//catch
         }//if
@@ -451,7 +452,7 @@ public class Agent {
         }
     }
 
-    public static void writeToFile(String path, long ... args) throws IOException {
+    public static String writeToFile(String path, long ... args) throws IOException {
         String str = "";
         for (int i = 0; i < args.length - 1; ++i) {
             str += Long.toString(args[i]) + ",";
@@ -460,6 +461,8 @@ public class Agent {
             str += Long.toString(args[args.length - 1]);
 
         Files.write(Paths.get(path), str.getBytes(), StandardOpenOption.APPEND);
+
+        return str;
     }
 
     public static void main (String args[]) {
