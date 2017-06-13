@@ -494,18 +494,15 @@ public class OrchestratorApp {
         public void event(DeviceEvent event) {
             switch (event.type()) {
                 case PORT_ADDED:
-                    log.info("Port {} is added!", event.subject());
                     log.info("Port {} is added!\n", event.subject());
                     break;
 //                case PORT_STATS_UPDATED:
 //                    if(!event.port().isEnabled()) {
-//                        log.info("Port {} is down!", event.subject());
 //                        log.info("Port {} is down!\n", event.subject());
 //                        recover(event);
 //                    }
 //                    break;
                 case PORT_REMOVED:
-                    log.info("Port {} is removed!", event.subject());
                     log.info("Port {} is removed!\n", event.subject());
                     recover(event);
                     break;

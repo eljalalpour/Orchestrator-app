@@ -270,10 +270,10 @@ public class Agent {
             ProcessBuilder processBuilder = new ProcessBuilder(commands);
 //            System.out.println(clickRun);
             Process p = processBuilder.start();
-            StreamGobbler errorGobbler = new StreamGobbler(p.getErrorStream());
-            StreamGobbler outputGobbler = new StreamGobbler(p.getInputStream());
-            errorGobbler.start();
-            outputGobbler.start();
+//            StreamGobbler errorGobbler = new StreamGobbler(p.getErrorStream());
+//            StreamGobbler outputGobbler = new StreamGobbler(p.getInputStream());
+//            errorGobbler.start();
+//            outputGobbler.start();
 
             afterInit = System.nanoTime();
             //TODO: check if the process is loaded completely
@@ -377,7 +377,7 @@ public class Agent {
             DataInputStream inputStream = new DataInputStream(in);
             // First read the size of the state, then read the state
             int size = inputStream.read();
-            System.out.printf("State size is: %d\n\n", size);
+//            System.out.printf("State size is: %d\n\n", size);
 
             // Read junk
             byte[] junk = new byte[3];
@@ -387,9 +387,9 @@ public class Agent {
             state = new byte[size];
             inputStream.read(state, 0, size);
 
-            System.out.println("State:\n");
-            for (int i = 0; i < size; i++)
-                System.out.printf("%d \n", state[i]);
+//            System.out.println("State:\n");
+//            for (int i = 0; i < size; i++)
+//                System.out.printf("%d \n", state[i]);
 
             out.close();
             in.close();
@@ -517,17 +517,17 @@ public class Agent {
                     if (bytes.length > 0) {
                         switch (bytes[CMD_OFFSET]) {
                             case Commands.MB_INIT:
-                                System.out.println("Received init command\n");
+//                                System.out.println("Received init command\n");
                                 agent.handleInit(false, bytes);
                                 break;
 
                             case Commands.MB_INIT_AND_FETCH_STATE:
-                                System.out.println("Received init and fetch state command\n");
+//                                System.out.println("Received init and fetch state command\n");
                                 agent.handleInit(true, bytes);
                                 break;
 
                             case Commands.GET_STATE:
-                                System.out.println("Received get command\n");
+//                                System.out.println("Received get command\n");
                                 byte[] states = agent.handleGetState(bytes);
                                 OutputStream out = clientSocket.getOutputStream();
                                 out.write(states.length);
@@ -535,7 +535,7 @@ public class Agent {
                                 out.flush();
                                 break;
                             case Commands.KILL_MIDDLEBOX:
-                                System.out.println("Received kill middlebox command\n");
+//                                System.out.println("Received kill middlebox command\n");
                                 killMiddlebox();
 
                             default:
