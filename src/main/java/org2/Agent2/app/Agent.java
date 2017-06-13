@@ -454,7 +454,13 @@ public class Agent {
 
     public static String writeToFile(String path, long ... args) throws IOException {
         String str = getLogString(path, args);
-        Files.write(Paths.get(path), str.getBytes(), StandardOpenOption.APPEND);
+        File ff = new File(path);
+        if (!ff.exists()) {
+            Files.write(Paths.get(path), str.getBytes(), StandardOpenOption.CREATE);
+        }//if
+        else {
+            Files.write(Paths.get(path), str.getBytes(), StandardOpenOption.APPEND);
+        }//else
 
         return str;
     }

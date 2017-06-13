@@ -136,7 +136,7 @@ public class OrchestratorApp {
 
     private void route(FaultTolerantChain chain){
         // We assume that an IP address is assigned to a single host
-        log.info("Routing");
+//        log.info("Routing");
         for(byte i = 0; i < chain.getChainHosts().size() - 1; ++i) {
             Host s = chain.getChainHosts().get(i);
             Host t = chain.getChainHosts().get(i + 1);
@@ -150,7 +150,7 @@ public class OrchestratorApp {
     }
 
     private void route(Host s, Host t, short tag) {
-        log.info("Routing between the source {} and the target {}", s, t);
+//        log.info("Routing between the source {} and the target {}", s, t);
         ArrayList<FlowRule> flowRules = new ArrayList<>();
         try {
             for (ConnectPoint cp: findPath(s, t)) {
@@ -159,7 +159,7 @@ public class OrchestratorApp {
                 flowRules.add(flowRule);
             }//for
             tagFlows.put(tag, flowRules);
-            log.info("adding tag {}", tag);
+//            log.info("adding tag {}", tag);
         }//try
         catch(NoSuchElementException nseExc) {
             nseExc.printStackTrace();
@@ -227,17 +227,17 @@ public class OrchestratorApp {
         Host u = chain.getChainHosts().get(
                 (failedIndex + 2) % (chain.length() + 2)); // +2 is for the source and the item after the failed one
 
-        log.info("removing tags {}",
-                (short)(chain.getFirstTag() + failedIndex));
-        log.info("removing tags {}",
-                (short)(chain.getFirstTag() + failedIndex));
+//        log.info("removing tags {}",
+//                (short)(chain.getFirstTag() + failedIndex));
+//        log.info("removing tags {}",
+//                (short)(chain.getFirstTag() + failedIndex));
 
         removeRules((short)(chain.getFirstTag() + failedIndex));
 
-        log.info("removing tags {}",
-                (short)(chain.getFirstTag() + failedIndex + 1));
-        log.info("removing tags {}",
-                (short)(chain.getFirstTag() + failedIndex + 1));
+//        log.info("removing tags {}",
+//                (short)(chain.getFirstTag() + failedIndex + 1));
+//        log.info("removing tags {}",
+//                (short)(chain.getFirstTag() + failedIndex + 1));
 
         removeRules((short)(chain.getFirstTag() + failedIndex + 1));
 
@@ -246,15 +246,15 @@ public class OrchestratorApp {
 
         if (failedIndex == 0 || failedIndex == chain.length() - 1) {
             short tag = (short)(chain.getFirstTag() + chain.length() + 1);
-            log.info("removing tag {}", tag);
-            log.info("removing tags {}", tag);
+//            log.info("removing tag {}", tag);
+//            log.info("removing tags {}", tag);
             removeRules(tag);
             route(chain.getChainHosts().get(chain.getChainHosts().size() - 2),
                   chain.getChainHosts().get(1),
                   tag);
         }//if
-        log.info("At the end of reroute!");
-        log.info("At the end of reroute!");
+//        log.info("At the end of reroute!");
+//        log.info("At the end of reroute!");
     }
 
     private void removeRules(short tag) {
@@ -361,14 +361,14 @@ public class OrchestratorApp {
                     if (found) {
                         end = System.nanoTime();
                         try {
-                            log.info("Writing to file!!");
+//                            log.info("Writing to file!!");
                             String str = Agent.getLogString(RECOVERY_LOG_FILE,
                                     start, end, beforeInit, afterInit, beforeReroute, afterReroute);
                             log.info(str);
                         }//try
                         catch (IOException e) {
                             //exception handling left as an exercise for the reader
-                            Log.info(e.getMessage());
+                            log.info(e.getMessage());
                         }//catch
 
                         break;
@@ -444,7 +444,7 @@ public class OrchestratorApp {
             } catch (NoSuchElementException nse){ }
         }//for
 
-        log.info("this is the size of available hosts {}", availableHosts.size());
+
 
         tagFlows = new HashMap<>();
 
