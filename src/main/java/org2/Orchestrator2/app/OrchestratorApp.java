@@ -361,7 +361,8 @@ public class OrchestratorApp {
                     if (found) {
                         end = System.nanoTime();
                         try {
-                            String str = Agent.writeToFile(RECOVERY_LOG_FILE,
+                            log.info("Writing to file!!");
+                            String str = Agent.getLogString(RECOVERY_LOG_FILE,
                                     start, end, beforeInit, afterInit, beforeReroute, afterReroute);
                             log.info(str);
                         }//try

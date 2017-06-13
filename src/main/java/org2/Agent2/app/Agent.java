@@ -453,14 +453,19 @@ public class Agent {
     }
 
     public static String writeToFile(String path, long ... args) throws IOException {
+        String str = getLogString(path, args);
+        Files.write(Paths.get(path), str.getBytes(), StandardOpenOption.APPEND);
+
+        return str;
+    }
+
+    public static String getLogString(String path, long ... args) throws IOException {
         String str = "";
         for (int i = 0; i < args.length - 1; ++i) {
             str += Long.toString(args[i]) + ",";
         }//for
         if (args.length > 0)
             str += Long.toString(args[args.length - 1]);
-
-        Files.write(Paths.get(path), str.getBytes(), StandardOpenOption.APPEND);
 
         return str;
     }
