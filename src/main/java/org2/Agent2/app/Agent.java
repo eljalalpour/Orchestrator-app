@@ -187,8 +187,8 @@ public class Agent {
     private String runClickCommand() {
         String command;
         if (chainPos == 0) {
-            System.out.println("At the beginning of the chain\n");
-            System.out.printf("firstVlanId: %d, chain-length: %d\n", firstVlanId, chainLength);
+//            System.out.println("At the beginning of the chain\n");
+//            System.out.printf("firstVlanId: %d, chain-length: %d\n", firstVlanId, chainLength);
             command = String.format(FIRST_CLICK_INSTANCE_CONF,
                     CLICK_INS_PORT,
                     firstVlanId + chainPos,
@@ -204,8 +204,8 @@ public class Agent {
             );
         }//if
         else if (chainPos == (chainLength - 1)) {
-            System.out.println("At the end of the chain\n");
-            System.out.printf("firstVlanId: %d, chain-length: %d\n", firstVlanId, chainLength);
+//            System.out.println("At the end of the chain\n");
+//            System.out.printf("firstVlanId: %d, chain-length: %d\n", firstVlanId, chainLength);
             command = String.format(LAST_CLICK_INSTANCE_CONF,
                     CLICK_INS_PORT,
                     firstVlanId + chainPos,
@@ -221,8 +221,8 @@ public class Agent {
             );
         }//else if
         else {
-            System.out.println("At the middle of the chain\n");
-            System.out.printf("firstVlanId: %d, chain-length: %d\n", firstVlanId, chainLength);
+//            System.out.println("At the middle of the chain\n");
+//            System.out.printf("firstVlanId: %d, chain-length: %d\n", firstVlanId, chainLength);
             command = String.format(DEF_CLICK_INSTANCE_CONF,
                     CLICK_INS_PORT,
                     firstVlanId + chainPos,
