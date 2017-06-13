@@ -453,17 +453,20 @@ public class Agent {
         }
     }
 
-    public static String writeToFile(String path, long ... args) throws IOException {
+    public static void writeToFile(String path, long ... args) throws IOException {
         String str = getLogString(path, args);
-        File ff = new File(path);
-        if (!ff.exists()) {
-            Files.write(Paths.get(path), str.getBytes(), StandardOpenOption.CREATE);
-        }//if
-        else {
-            Files.write(Paths.get(path), str.getBytes(), StandardOpenOption.APPEND);
-        }//else
 
-        return str;
+        FileWriter fw = new FileWriter(path, true);
+        BufferedWriter bw = new BufferedWriter(fw);
+        PrintWriter out = new PrintWriter(bw);
+        out.println(str);
+//        File ff = new File(path);
+//        if (!ff.exists()) {
+//            Files.write(Paths.get(path), str.getBytes(), StandardOpenOption.CREATE);
+//        }//if
+//        else {
+//            Files.write(Paths.get(path), str.getBytes(), StandardOpenOption.APPEND);
+//        }//else
     }
 
     public static String getLogString(String path, long ... args) throws IOException {
