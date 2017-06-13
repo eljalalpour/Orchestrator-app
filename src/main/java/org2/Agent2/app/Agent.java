@@ -6,6 +6,9 @@ import java.net.InetAddress;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 
 class StreamGobbler extends Thread {
@@ -249,7 +252,13 @@ public class Agent {
 
     public void handleInit(boolean fetchState, byte[] bytes) {
         // Run the click instance
+        long beforeInit, afterInit, beforeFetch, afterFetch, end;
+        beforeInit = afterInit = beforeFetch = afterFetch = end = 0;
+
+        long start = System.nanoTime();
         try {
+            beforeInit = System.nanoTime();
+
             setValues(bytes);
             ArrayList<String> commands = new ArrayList<>();
             commands.add("sudo");
@@ -258,13 +267,14 @@ public class Agent {
             String clickRun = runClickCommand();
             commands.add(clickRun);
             ProcessBuilder processBuilder = new ProcessBuilder(commands);
-            System.out.println(clickRun);
+//            System.out.println(clickRun);
             Process p = processBuilder.start();
             StreamGobbler errorGobbler = new StreamGobbler(p.getErrorStream());
             StreamGobbler outputGobbler = new StreamGobbler(p.getInputStream());
             errorGobbler.start();
             outputGobbler.start();
 
+            afterInit = System.nanoTime();
             //TODO: check if the process is loaded completely
         }//try
         catch (IOException ioExc) {
@@ -273,12 +283,13 @@ public class Agent {
 
         // Fetch the state
         if (fetchState) {
+            beforeFetch = System.nanoTime();
             // Find the position of this replica in the chain
 //            FaultTolerantChain chain = Commands.parseChainFromInitCommand(bytes);
             ArrayList<InetAddress> inetAddresses = Commands.parseIpAddresses(bytes);
 
-            for (int i = 0; i < inetAddresses.size(); ++i)
-                System.out.printf(inetAddresses.get(i).toString());
+//            for (int i = 0; i < inetAddresses.size(); ++i)
+//                System.out.printf(inetAddresses.get(i).toString());
 
             byte chainPos = Commands.parseChainPosFromInitCommand(bytes);
 //            for (byte i = 0; i < ipAddrs.size(); ++i) {
@@ -294,8 +305,8 @@ public class Agent {
             for (byte i = 0; i < whoToAsk.length; ++i) whoToAsk[i] = whoToAsk(f, n, i, chainPos);
             whoToAsk[f] = (chainPos + 1) % n;
 
-            for (byte i = 0; i < whoToAsk.length; ++i)
-                System.out.printf("Who to ask %d is %d \n", i, whoToAsk[i]);
+//            for (byte i = 0; i < whoToAsk.length; ++i)
+//                System.out.printf("Who to ask %d is %d \n", i, whoToAsk[i]);
 
 //            byte[][] states = new byte[f + 1][];
             boolean[] successes = new boolean[f + 1];
@@ -340,6 +351,13 @@ public class Agent {
 //                }//for
             }//do
             while(allSet(successes));//while
+
+            afterFetch = System.nanoTime();
+
+            try {
+                Agent.writeToFile("recovery.txt", start, beforeInit, afterInit, beforeFetch, afterFetch, end);
+            }//try
+            catch(IOException exc) { }//catch
         }//if
     }
 
@@ -430,6 +448,17 @@ public class Agent {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public static void writeToFile(String path, long ... args) throws IOException {
+        String str = "";
+        for (int i = 0; i < args.length - 1; ++i) {
+            str += Long.toString(args[i]) + ",";
+        }//for
+        if (args.length > 0)
+            str += Long.toString(args[args.length - 1]);
+
+        Files.write(Paths.get(path), str.getBytes(), StandardOpenOption.APPEND);
     }
 
     public static void main (String args[]) {

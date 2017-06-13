@@ -1,5 +1,6 @@
 package org2.Orchestrator2.app;
 
+import com.esotericsoftware.minlog.Log;
 import org.apache.felix.scr.annotations.*;
 import org.onlab.packet.Ip4Address;
 import org.onlab.packet.VlanId;
@@ -14,9 +15,13 @@ import org.onosproject.net.host.*;
 import org.onosproject.net.topology.TopologyService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org2.Agent2.app.Agent;
 
 import java.io.*;
 import java.net.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.security.InvalidParameterException;
 import java.util.*;
 
@@ -295,66 +300,86 @@ public class OrchestratorApp {
     }
 
     private void recover(DeviceEvent deviceEvent) {
+        long start, beforeInit, afterInit, beforeReroute, afterReroute, end;
+        beforeInit = afterInit = beforeReroute = afterReroute = end = 0;
+        start= System.nanoTime();
         // TODO: find the failed host if any, and remove it from replica mapping, replace with new host
-        log.info("Recovering...");
-        log.info("Recovering...");
+//        log.info("Recovering...");
+//        log.info("Recovering...");
         Host host = hostToDevice.get(deviceService.getDevice(deviceEvent.subject().id()));
         if (host != null) {
             boolean found = false;
             try {
-                log.info("Host {} is down\n", host);
-                log.info("Host {} is down", host);
-
-                log.info("Searching for the failed chain\n");
-                log.info("Searching for the failed chain");
+//                log.info("Host {} is down\n", host);
+//                log.info("Host {} is down", host);
+//
+//                log.info("Searching for the failed chain\n");
+//                log.info("Searching for the failed chain");
                 for (FaultTolerantChain ch : placedChains) {
-                    log.info("Searching for the failed host in chain\n");
-                    log.info("Searching for the failed host in chain");
-                    log.info("Replica mapping size: {}\n", ch.replicaMapping.size());
-                    log.info("Replica mapping size: {}", ch.replicaMapping.size());
+//                    log.info("Searching for the failed host in chain\n");
+//                    log.info("Searching for the failed host in chain");
+//                    log.info("Replica mapping size: {}\n", ch.replicaMapping.size());
+//                    log.info("Replica mapping size: {}", ch.replicaMapping.size());
                     byte j = 0;
                     for (Host host1 : ch.replicaMapping) {
-                        log.info("Check host {}", host1.id());
-                        log.info("Check host {}", host1.id());
+//                        log.info("Check host {}", host1.id());
+//                        log.info("Check host {}", host1.id());
 
                         if (host1.equals(host)) {
-                            log.info("The failed host is found!");
-                            log.info("The failed host is found!");
+//                            log.info("The failed host is found!");
+//                            log.info("The failed host is found!");
 
 
                             ch.getMB(j);
                             host.ipAddresses().iterator().next().toInetAddress();
                             privateToPublicAddresses.get(host.ipAddresses().iterator().next().toInetAddress());
                             ch.getFirstTag();
-                            init(Commands.KILL_MIDDLEBOX, ch.getMB(j), privateToPublicAddresses.get(host.ipAddresses().iterator().next().toInetAddress()), j, ch.getFirstTag(), ch);
+//                            init(Commands.KILL_MIDDLEBOX, ch.getMB(j), privateToPublicAddresses.get(host.ipAddresses().iterator().next().toInetAddress()), j, ch.getFirstTag(), ch);
 
                             int index = findAvailableHost(ch);
                             Host availableHost = availableHosts.get(index);
-                            log.info("Host {} is chosen for recovery", availableHost.id());
-                            log.info("Host {} is chosen for recovery", availableHost.id());
+//                            log.info("Host {} is chosen for recovery", availableHost.id());
+//                            log.info("Host {} is chosen for recovery", availableHost.id());
 
                             ch.replicaMapping.remove(j);
                             ch.replicaMapping.add(j, availableHost);
+                            beforeInit = System.nanoTime();
                             init(Commands.MB_INIT_AND_FETCH_STATE, ch.getMB(j),
                                     privateToPublicAddresses.get(availableHost.ipAddresses().iterator().next().toInetAddress())
                                     , j, ch.getFirstTag(), ch);
+                            afterInit = System.nanoTime();
                             availableHosts.remove(index);
+                            beforeReroute = System.nanoTime();
                             reroute(ch, j);
+                            afterReroute = System.nanoTime();
                             found = true;
                             break;
                         }//if
                         ++j;
                     }//for
-                    if (found) break;
+                    if (found) {
+                        end = System.nanoTime();
+                        try {
+                            Agent.writeToFile("recovery.txt",
+                                    start, beforeInit, afterInit, beforeReroute, afterReroute, end);
+                        }//try
+                        catch (IOException e) {
+                            //exception handling left as an exercise for the reader
+                            Log.info(e.getMessage());
+                        }//catch
+
+                        break;
+                    }
                 }//for
 
             }//try
             catch (IOException ioExc) {
                 ioExc.printStackTrace();
             }//catch
+
         }
-        log.info("At the end of recovery!");
-        log.info("At the end of recovery!");
+//        log.info("At the end of recovery!");
+//        log.info("At the end of recovery!");
     }
 
     public FaultTolerantChain parse(String srcChainDst, byte f) throws InvalidParameterException {
@@ -425,7 +450,7 @@ public class OrchestratorApp {
         deviceService.addListener(deviceListener);
         log.info("host listener added!");
 
-        deployChain("192.168.201.17,1,2,192.168.201.18", (byte)1);
+        deployChain("192.168.201.17,0,1,192.168.201.18", (byte)1);
     }
 
     @Deactivate
