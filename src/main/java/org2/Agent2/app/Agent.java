@@ -64,10 +64,12 @@ public class Agent {
                     "firewall :: Classifier(12/0806 20/0001, 12/0806 20/0002, 12/0800, -);" +
                     "FromDevice(p0)" +
                     "-> FTFilterElement(10, 14)" +
+                    "-> CheckIPHeader(18)" +
                     "-> ap::FTAppenderElement(10)" +
                     "-> VLANDecap" +
                     "-> CheckIPHeader(14)" +
                     "-> se::FTStateElement(ID 1, F 1)" +
+                    "->CheckIPHeader(14)" +
                     "-> firewall;firewall[0]" +
                     "-> Discard;firewall[1]" +
                     "-> Discard;firewall[3]" +
@@ -81,7 +83,7 @@ public class Agent {
                     "-> mo::Monitor(ID 1);" +
                     "ip_from_extern[4]" +
                     "-> Discard;" +
-                    "mo-> [1]se;" +
+                    "mo -> CheckIPHeader(14) -> [1]se;" +
                     "se[1]" +
                     "->VLANEncap(VLAN_ID 11)" +
                     "->VLANEncap(VLAN_ID 11)" +
