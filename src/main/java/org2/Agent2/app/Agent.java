@@ -168,8 +168,8 @@ public class Agent {
                     "-> CheckIPHeader(14)" +
                     "->[1]se;" +
                     "se[1]" +
-                    "->ve :: VLANEncap(VLAN_ID 12)" +
-                    "->ve" +
+                    "->VLANEncap(VLAN_ID 12)" +
+                    "->VLANEncap(VLAN_ID 12)" +
                     "-> Queue" +
                     "-> ToDevice(p0);";
 
