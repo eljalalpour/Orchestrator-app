@@ -71,22 +71,22 @@ public class Agent {
                     "-> se::FTStateElement(ID 1, F 1)" +
                     "-> ch14" +
                     "-> firewall;firewall[0]" +
-                    "-> Discard;firewall[1]" +
-                    "-> Discard;firewall[3]" +
-                    "-> Discard;ip_from_extern :: IPClassifier(dst tcp ssh, dst tcp www or https, src tcp port ftp, tcp or udp, -);" +
+                    "-> d :: Discard;firewall[1]" +
+                    "-> d;firewall[3]" +
+                    "-> d;ip_from_extern :: IPClassifier(dst tcp ssh, dst tcp www or https, src tcp port ftp, tcp or udp, -);" +
                     "firewall[2]" +
                     "-> ip_from_extern;ip_from_extern[0]" +
-                    "-> Discard;" +
-                    "ip_from_extern[1] -> Discard;" +
-                    "ip_from_extern[2] -> Discard;" +
+                    "-> d;" +
+                    "ip_from_extern[1] -> d;" +
+                    "ip_from_extern[2] -> d;" +
                     "ip_from_extern[3]" +
                     "-> mo::Monitor(ID 1);" +
                     "ip_from_extern[4]" +
-                    "-> Discard;" +
+                    "-> d;" +
                     "mo -> ch14 -> [1]se;" +
                     "se[1]" +
-                    "->VLANEncap(VLAN_ID 11)" +
-                    "->VLANEncap(VLAN_ID 11)" +
+                    "->ve :: VLANEncap(VLAN_ID 11)" +
+                    "->ve" +
                     "->Queue" +
                     "->ToDevice(p0);";
 
@@ -128,11 +128,11 @@ public class Agent {
                     "-> [1]se;se[1]" +
                     "-> ch14" +
                     "-> be::FTBufferElement" +
-                    "-> VLANEncap(VLAN_ID 13)" +
-                    "-> VLANEncap(VLAN_ID 13)" +
+                    "-> ve13 :: VLANEncap(VLAN_ID 13)" +
+                    "-> ve13 " +
                     "-> pe::FTPassElement;be[1]" +
-                    "-> VLANEncap(VLAN_ID 14)" +
-                    "-> VLANEncap(VLAN_ID 14)" +
+                    "-> ve14 ::VLANEncap(VLAN_ID 14)" +
+                    "-> ve14" +
                     "->[1]pe; " +
                     "pe" +
                     "->Queue" +
@@ -151,8 +151,8 @@ public class Agent {
                     "->ch14" +
                     "->[1]se;" +
                     "se[1]" +
-                    "->VLANEncap(VLAN_ID %d)" +
-                    "->VLANEncap(VLAN_ID %d)" +
+                    "->ve :: VLANEncap(VLAN_ID %d)" +
+                    "->ve" +
                     "->Queue" +
                     "->ToDevice(p0)";
 
@@ -168,8 +168,8 @@ public class Agent {
                     "-> ch14" +
                     "->[1]se;" +
                     "se[1]" +
-                    "->VLANEncap(VLAN_ID 12)" +
-                    "->VLANEncap(VLAN_ID 12)" +
+                    "->ve :: VLANEncap(VLAN_ID 12)" +
+                    "->ve" +
                     "-> Queue" +
                     "-> ToDevice(p0);";
 
