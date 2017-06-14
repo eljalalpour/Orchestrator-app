@@ -425,6 +425,7 @@ public class OrchestratorApp {
             privateToPublicAddresses.put(InetAddress.getByName("192.168.201.2"), InetAddress.getByName("10.12.4.22"));
             privateToPublicAddresses.put(InetAddress.getByName("192.168.201.17"), InetAddress.getByName("10.12.4.19"));
             privateToPublicAddresses.put(InetAddress.getByName("192.168.201.18"), InetAddress.getByName("10.12.4.19"));
+            privateToPublicAddresses.put(InetAddress.getByName("192.168.201.6"), InetAddress.getByName("10.12.4.11"));
 
         }catch (UnknownHostException uhExc){
             uhExc.printStackTrace();

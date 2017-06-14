@@ -64,12 +64,12 @@ public class Agent {
                     "firewall :: Classifier(12/0806 20/0001, 12/0806 20/0002, 12/0800, -);" +
                     "FromDevice(p0)" +
                     "-> FTFilterElement(10, 14)" +
-                    "-> CheckIPHeader(18)" +
+                    "-> ch18 :: CheckIPHeader(18)" +
                     "-> ap::FTAppenderElement(10)" +
                     "-> VLANDecap" +
-                    "-> CheckIPHeader(14)" +
+                    "-> ch14 :: CheckIPHeader(14)" +
                     "-> se::FTStateElement(ID 1, F 1)" +
-                    "->CheckIPHeader(14)" +
+                    "-> ch14" +
                     "-> firewall;firewall[0]" +
                     "-> Discard;firewall[1]" +
                     "-> Discard;firewall[3]" +
@@ -83,7 +83,7 @@ public class Agent {
                     "-> mo::Monitor(ID 1);" +
                     "ip_from_extern[4]" +
                     "-> Discard;" +
-                    "mo -> CheckIPHeader(14) -> [1]se;" +
+                    "mo -> ch14 -> [1]se;" +
                     "se[1]" +
                     "->VLANEncap(VLAN_ID 11)" +
                     "->VLANEncap(VLAN_ID 11)" +
@@ -96,14 +96,14 @@ public class Agent {
                     "FromDevice(p0)" +
                     "->FTFilterElement(%d)" +
                     "->VLANDecap" +
-                    "->CheckIPHeader(14)" +
+                    "->ch14 :: CheckIPHeader(14)" +
                     "->se::FTStateElement(ID %d, VLAN_ID %d, F %d)" +
-                    "->CheckIPHeader(14)" +
+                    "->ch14" +
                     "->MB%d::CounterMB(ID %d)" +
                     "->CheckIPHeader(14)" +
                     "->[1]se;" +
                     "se[1]" +
-                    "->CheckIPHeader(14)" +
+                    "->ch14" +
                     "->be::FTBufferElement" +
                     "->VLANEncap(VLAN_ID %d)" +
                     "->VLANEncap(VLAN_ID %d)" +
@@ -121,12 +121,12 @@ public class Agent {
                     "FTControlElement(10001);" +
                     "FromDevice(p0)" +
                     "-> FTFilterElement(12)" +
-                    "-> CheckIPHeader(14)" +
+                    "-> ch14 :: CheckIPHeader(14)" +
                     "-> se::FTStateElement(ID 1, F 1)" +
                     "-> lna::nat(ID 3)" +
-                    "-> CheckIPHeader(14)" +
+                    "-> ch14" +
                     "-> [1]se;se[1]" +
-                    "-> CheckIPHeader(14)" +
+                    "-> ch14" +
                     "-> be::FTBufferElement" +
                     "-> VLANEncap(VLAN_ID 13)" +
                     "-> VLANEncap(VLAN_ID 13)" +
@@ -144,11 +144,11 @@ public class Agent {
                     "FromDevice(p0)" +
                     "->FTFilterElement(%d)" +
                     "->VLANDecap" +
-                    "->CheckIPHeader(14)" +
+                    "->ch14 :: CheckIPHeader(14)" +
                     "->se::FTStateElement(ID %d, VLAN_ID %d, F %d)" +
-                    "->CheckIPHeader(14)" +
+                    "->ch14" +
                     "->MB%d::CounterMB(ID %d)" +
-                    "->CheckIPHeader(14)" +
+                    "->ch14" +
                     "->[1]se;" +
                     "se[1]" +
                     "->VLANEncap(VLAN_ID %d)" +
@@ -162,10 +162,10 @@ public class Agent {
                     "FromDevice(p0)" +
                     "-> FTFilterElement(11)" +
                     "-> VLANDecap" +
-                    "-> CheckIPHeader(14)" +
+                    "-> ch14 :: CheckIPHeader(14)" +
                     "-> se::FTStateElement(ID 2, F 1)" +
                     "-> cmb::Monitor(ID 1)" +
-                    "-> CheckIPHeader(14)" +
+                    "-> ch14" +
                     "->[1]se;" +
                     "se[1]" +
                     "->VLANEncap(VLAN_ID 12)" +
