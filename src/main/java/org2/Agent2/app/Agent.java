@@ -67,9 +67,9 @@ public class Agent {
                     "-> ch18 :: CheckIPHeader(18)" +
                     "-> ap::FTAppenderElement(10)" +
                     "-> VLANDecap" +
-                    "-> ch14 :: CheckIPHeader(14)" +
+                    "-> CheckIPHeader(14)" +
                     "-> se::FTStateElement(ID 1, F 1)" +
-                    "-> ch14" +
+                    "-> CheckIPHeader(14)" +
                     "-> firewall;firewall[0]" +
                     "-> d :: Discard;firewall[1]" +
                     "-> d;firewall[3]" +
@@ -83,10 +83,10 @@ public class Agent {
                     "-> mo::Monitor(ID 1);" +
                     "ip_from_extern[4]" +
                     "-> d;" +
-                    "mo -> ch14 -> [1]se;" +
+                    "mo -> CheckIPHeader(14) -> [1]se;" +
                     "se[1]" +
-                    "->ve :: VLANEncap(VLAN_ID 11)" +
-                    "->ve" +
+                    "->VLANEncap(VLAN_ID 11)" +
+                    "->VLANEncap(VLAN_ID 11)" +
                     "->Queue" +
                     "->ToDevice(p0);";
 
@@ -96,14 +96,14 @@ public class Agent {
                     "FromDevice(p0)" +
                     "->FTFilterElement(%d)" +
                     "->VLANDecap" +
-                    "->ch14 :: CheckIPHeader(14)" +
+                    "->CheckIPHeader(14)" +
                     "->se::FTStateElement(ID %d, VLAN_ID %d, F %d)" +
-                    "->ch14" +
+                    "->CheckIPHeader(14)" +
                     "->MB%d::CounterMB(ID %d)" +
                     "->CheckIPHeader(14)" +
                     "->[1]se;" +
                     "se[1]" +
-                    "->ch14" +
+                    "->CheckIPHeader(14)" +
                     "->be::FTBufferElement" +
                     "->VLANEncap(VLAN_ID %d)" +
                     "->VLANEncap(VLAN_ID %d)" +
@@ -121,18 +121,18 @@ public class Agent {
                     "FTControlElement(10001);" +
                     "FromDevice(p0)" +
                     "-> FTFilterElement(12)" +
-                    "-> ch14 :: CheckIPHeader(14)" +
+                    "-> CheckIPHeader(14)" +
                     "-> se::FTStateElement(ID 1, F 1)" +
                     "-> lna::nat(ID 3)" +
-                    "-> ch14" +
+                    "-> CheckIPHeader(14)" +
                     "-> [1]se;se[1]" +
-                    "-> ch14" +
+                    "-> CheckIPHeader(14)" +
                     "-> be::FTBufferElement" +
                     "-> ve13 :: VLANEncap(VLAN_ID 13)" +
                     "-> ve13 " +
                     "-> pe::FTPassElement;be[1]" +
-                    "-> ve14 ::VLANEncap(VLAN_ID 14)" +
-                    "-> ve14" +
+                    "-> VLANEncap(VLAN_ID 14)" +
+                    "-> VLANEncap(VLAN_ID 14)" +
                     "->[1]pe; " +
                     "pe" +
                     "->Queue" +
@@ -144,11 +144,11 @@ public class Agent {
                     "FromDevice(p0)" +
                     "->FTFilterElement(%d)" +
                     "->VLANDecap" +
-                    "->ch14 :: CheckIPHeader(14)" +
+                    "->CheckIPHeader(14)" +
                     "->se::FTStateElement(ID %d, VLAN_ID %d, F %d)" +
-                    "->ch14" +
+                    "->CheckIPHeader(14)" +
                     "->MB%d::CounterMB(ID %d)" +
-                    "->ch14" +
+                    "->CheckIPHeader(14)" +
                     "->[1]se;" +
                     "se[1]" +
                     "->ve :: VLANEncap(VLAN_ID %d)" +
@@ -162,10 +162,10 @@ public class Agent {
                     "FromDevice(p0)" +
                     "-> FTFilterElement(11)" +
                     "-> VLANDecap" +
-                    "-> ch14 :: CheckIPHeader(14)" +
+                    "-> CheckIPHeader(14)" +
                     "-> se::FTStateElement(ID 2, F 1)" +
                     "-> cmb::Monitor(ID 1)" +
-                    "-> ch14" +
+                    "-> CheckIPHeader(14)" +
                     "->[1]se;" +
                     "se[1]" +
                     "->ve :: VLANEncap(VLAN_ID 12)" +
