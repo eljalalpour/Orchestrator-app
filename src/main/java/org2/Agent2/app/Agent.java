@@ -63,7 +63,7 @@ public class Agent {
                     "FTControlElement(10001);" +
                     "firewall :: Classifier(12/0806 20/0001, 12/0806 20/0002, 12/0800, -);" +
                     "FromDevice(p0)" +
-                    "-> FTFilrElement(10, 14)" +
+                    "-> FTFilterElement(10, 14)" +
                     "-> ap::FTAppenderElement(10)" +
                     "-> VLANDecap" +
                     "-> CheckIPHeader(14)" +
@@ -161,7 +161,7 @@ public class Agent {
                     "-> FTFilterElement(11)" +
                     "-> VLANDecap" +
                     "-> CheckIPHeader(14)" +
-                    "-> seFTStateElement(ID 2, F 1)" +
+                    "-> se::FTStateElement(ID 2, F 1)" +
                     "-> cmb::Monitor(ID 1)" +
                     "-> CheckIPHeader(14)" +
                     "->[1]se;" +
