@@ -128,8 +128,8 @@ public class Agent {
                     "-> [1]se;se[1]" +
                     "-> CheckIPHeader(14)" +
                     "-> be::FTBufferElement" +
-                    "-> ve13 :: VLANEncap(VLAN_ID 13)" +
-                    "-> ve13 " +
+                    "-> VLANEncap(VLAN_ID 13)" +
+                    "-> VLANEncap(VLAN_ID 13) " +
                     "-> pe::FTPassElement;be[1]" +
                     "-> VLANEncap(VLAN_ID 14)" +
                     "-> VLANEncap(VLAN_ID 14)" +
@@ -151,8 +151,8 @@ public class Agent {
                     "->CheckIPHeader(14)" +
                     "->[1]se;" +
                     "se[1]" +
-                    "->ve :: VLANEncap(VLAN_ID %d)" +
-                    "->ve" +
+                    "->VLANEncap(VLAN_ID %d)" +
+                    "->VLANEncap(VLAN_ID %d)" +
                     "->Queue" +
                     "->ToDevice(p0)";
 
