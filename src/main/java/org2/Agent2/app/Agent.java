@@ -60,32 +60,33 @@ public class Agent {
 
     static final String FIXED_FIRST_CLICK_INSTANCE_CONF =
             "require(package \"FTSFC\");" +
-                "FTControlElement(10001);" +
-                "firewall :: Classifier(12/0806 20/0001, 12/0806 20/0002, 12/0800, -);" +
-                "FromDevice(p0)" +
-                "-> FTFilterElement(10, 14)" +
-                "-> VLANDecap" +
-                "-> CheckIPHeader(14)" +
-                "-> ap::FTAppenderElement(10)" +
-                "-> se::FTStateElement(ID 1, F 1)" +
-                "-> firewall;" +
-                "firewall[0] -> Discard;" +
-                "firewall[1] -> Discard;" +
-                "firewall[3] -> Discard;" +
-                "ip_from_extern :: IPClassifier(dst tcp ssh, dst tcp www or https, src tcp port ftp, tcp or udp, -);" +
-                "firewall[2] -> ip_from_extern;" +
-                "ip_from_extern[0] -> Discard;" +
-                "ip_from_extern[1] -> Discard;" +
-                "ip_from_extern[2] -> Discard;" +
-                "ip_from_extern[3] -> mo::Monitor(ID 1);" +
-                "ip_from_extern[4] -> Discard;" +
-                "mo" +
-                "-> [1]se;" +
-                "se[1]" +
-                "->VLANEncap(VLAN_ID 11)" +
-                "->VLANEncap(VLAN_ID 11)" +
-                "-> Queue" +
-                "-> ToDevice(p0);";
+                    "FTControlElement(10001);" +
+                    "firewall :: Classifier(12/0806 20/0001, 12/0806 20/0002, 12/0800, -);" +
+                    "FromDevice(p0)" +
+                    "-> FTFilrElement(10, 14)" +
+                    "-> ap::FTAppenderElement(10)" +
+                    "-> VLANDecap" +
+                    "-> CheckIPHeader(14)" +
+                    "-> se::FTStateElement(ID 1, F 1)" +
+                    "-> firewall;firewall[0]" +
+                    "-> Discard;firewall[1]" +
+                    "-> Discard;firewall[3]" +
+                    "-> Discard;ip_from_extern :: IPClassifier(dst tcp ssh, dst tcp www or https, src tcp port ftp, tcp or udp, -);" +
+                    "firewall[2]" +
+                    "-> ip_from_extern;ip_from_extern[0]" +
+                    "-> Discard;" +
+                    "ip_from_extern[1] -> Discard;" +
+                    "ip_from_extern[2] -> Discard;" +
+                    "ip_from_extern[3]" +
+                    "-> mo::Monitor(ID 1);" +
+                    "ip_from_extern[4]" +
+                    "-> Discard;" +
+                    "mo-> [1]se;" +
+                    "se[1]" +
+                    "->VLANEncap(VLAN_ID 11)" +
+                    "->VLANEncap(VLAN_ID 11)" +
+                    "->Queue" +
+                    "->ToDevice(p0);";
 
     static final String LAST_CLICK_INSTANCE_CONF =
             "require(package \"FTSFC\");" +
@@ -118,19 +119,19 @@ public class Agent {
                     "FTControlElement(10001);" +
                     "FromDevice(p0)" +
                     "-> FTFilterElement(12)" +
+                    "-> CheckIPHeader(14)" +
                     "-> se::FTStateElement(ID 1, F 1)" +
-                    "-> lnat::nat(ID 1)" +
-                    "-> [1]se;" +
-                    "se[1]" +
+                    "-> lna::nat(ID 3)" +
+                    "-> CheckIPHeader(14)" +
+                    "-> [1]se;se[1]" +
                     "-> CheckIPHeader(14)" +
                     "-> be::FTBufferElement" +
                     "-> VLANEncap(VLAN_ID 13)" +
                     "-> VLANEncap(VLAN_ID 13)" +
-                    "-> pe::FTPassElement;" +
-                    "be[1]" +
+                    "-> pe::FTPassElement;be[1]" +
                     "-> VLANEncap(VLAN_ID 14)" +
                     "-> VLANEncap(VLAN_ID 14)" +
-                    "-> [1]pe;" +
+                    "->[1]pe; " +
                     "pe" +
                     "->Queue" +
                     "->ToDevice(p0);";
@@ -159,9 +160,11 @@ public class Agent {
                     "FromDevice(p0)" +
                     "-> FTFilterElement(11)" +
                     "-> VLANDecap" +
-                    "-> se::FTStateElement(ID 2, F 1)" +
+                    "-> CheckIPHeader(14)" +
+                    "-> seFTStateElement(ID 2, F 1)" +
                     "-> cmb::Monitor(ID 1)" +
-                    "-> [1]se;" +
+                    "-> CheckIPHeader(14)" +
+                    "->[1]se;" +
                     "se[1]" +
                     "->VLANEncap(VLAN_ID 12)" +
                     "->VLANEncap(VLAN_ID 12)" +
@@ -235,7 +238,7 @@ public class Agent {
 //                    firstVlanId + chainPos + 2,
 //                    firstVlanId + chainPos + 2
 //            );
-            command = FIXED_MIDDLE_INSTANCE_CONF;
+            command = FIXED_LAST_CLICK_INSTANCE_CONF;
         }//else if
         else {
 //            System.out.println("At the middle of the chain\n");
@@ -251,7 +254,7 @@ public class Agent {
 //                    firstVlanId + chainPos + 1,
 //                    firstVlanId + chainPos + 1
 //            );
-            command = FIXED_LAST_CLICK_INSTANCE_CONF;
+            command = FIXED_MIDDLE_INSTANCE_CONF;
         }//else
 
         return command;
