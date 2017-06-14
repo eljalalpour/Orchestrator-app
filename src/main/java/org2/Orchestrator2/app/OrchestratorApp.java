@@ -453,7 +453,7 @@ public class OrchestratorApp {
         deviceService.addListener(deviceListener);
         log.info("host listener added!");
 
-        deployChain("192.168.201.17,0,1,192.168.201.18", (byte)1);
+        deployChain("192.168.201.17,0,1,2,192.168.201.18", (byte)1);
     }
 
     @Deactivate

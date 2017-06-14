@@ -241,10 +241,6 @@ public class Agent {
         whoToAsk[chainPos] = (byte)((chainPos + 1) % n);
         boolean[] successes = new boolean[f + 1];
         FetchStateThread[] threads = new FetchStateThread[f + 1];
-
-        for (byte i = (byte)((chainPos - f) % n); i <= chainPos; ++i) {
-
-        }//for
     }
 
     public void handleInit(boolean fetchState, byte[] bytes) {
