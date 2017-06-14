@@ -10,8 +10,30 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+class StreamGobbler extends Thread {
+    InputStream is;
+
+    // reads everything from is until empty.
+    StreamGobbler(InputStream is) {
+        this.is = is;
+    }
+
+    public void run() {
+        try {
+            InputStreamReader isr = new InputStreamReader(is);
+            BufferedReader br = new BufferedReader(isr);
+            String line = null;
+            while ( (line = br.readLine()) != null)
+                System.out.println(line);
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+        }
+    }
+}
+
 
 public class Agent {
+
     static final String RECOVERY_LOG_FILE = "/home/ubuntu/experiments/recovery.agent.txt";
     static final int DEFAULT_AGENT_PORT = 2222;
     static final int CLICK_INS_PORT = 10001;
@@ -263,8 +285,11 @@ public class Agent {
 
             System.out.println(clickRun);
 
-            processBuilder.start();
-
+            Process p = processBuilder.start();
+            StreamGobbler errorGobbler = new StreamGobbler(p.getErrorStream());
+            StreamGobbler outputGobbler = new StreamGobbler(p.getInputStream());
+            errorGobbler.start();
+            outputGobbler.start();
             afterInit = System.nanoTime();
         }//try
         catch (IOException ioExc) {
