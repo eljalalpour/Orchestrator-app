@@ -11,28 +11,6 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 
-class StreamGobbler extends Thread {
-    InputStream is;
-
-    // reads everything from is until empty.
-    StreamGobbler(InputStream is) {
-        this.is = is;
-    }
-
-    public void run() {
-        try {
-            InputStreamReader isr = new InputStreamReader(is);
-            BufferedReader br = new BufferedReader(isr);
-            String line = null;
-            while ( (line = br.readLine()) != null)
-                System.out.println(line);
-        } catch (IOException ioe) {
-            ioe.printStackTrace();
-        }
-    }
-}
-
-
 public class Agent {
     static final String RECOVERY_LOG_FILE = "/home/ubuntu/experiments/recovery.agent.txt";
     static final int DEFAULT_AGENT_PORT = 2222;
@@ -43,9 +21,9 @@ public class Agent {
                     "FTControlElement(%d);" +
                     "FromDevice(p0)" +
                     "->FTFilterElement(%d, %d)" +
-                    "->CheckIPHeader(18)" +
-                    "->FTAppenderElement(%d)" +
                     "->VLANDecap" +
+                    "->CheckIPHeader(14)" +
+                    "->FTAppenderElement(%d)" +
                     "->CheckIPHeader(14)" +
                     "->se::FTStateElement(ID %d, VLAN_ID %d, F %d)" +
                     "->CheckIPHeader(14)" +
@@ -57,6 +35,35 @@ public class Agent {
                     "->VLANEncap(VLAN_ID %d)" +
                     "->Queue" +
                     "->ToDevice(p0)";
+
+    static final String FIXED_FIRST_CLICK_INSTANCE_CONF =
+        "require(package \"FTSFC\");" +
+                "firewall :: Classifier(12/0806 20/0001, 12/0806 20/0002, 12/0800, -);" +
+
+                "FromDevice(p0)" +
+                "-> FTFilterElement(10, 13)" +
+                "-> VLANDecap" +
+                "-> CheckIPHeader(14)" +
+                "-> ap::FTAppenderElement(10)" +
+                "-> se::FTStateElement(ID 1, F 1)" +
+                "-> firewall;" +
+                "firewall[0] -> Discard;" +
+                "firewall[1] -> Discard;" +
+                "firewall[3] -> Discard;" +
+                "ip_from_extern :: IPClassifier(dst tcp ssh, dst tcp www or https, src tcp port ftp, tcp or udp, -);" +
+                "firewall[2] -> ip_from_extern;" +
+                "ip_from_extern[0] -> Discard;" +
+                "ip_from_extern[1] -> Discard;" +
+                "ip_from_extern[2] -> Discard;" +
+                "ip_from_extern[3] -> mo::Monitor(ID 1);" +
+                "ip_from_extern[4] -> Discard;" +
+                "mo" +
+                "-> [1]se;" +
+                "se[1]" +
+                "->VLANEncap(VLAN_ID 11)" +
+                "->VLANEncap(VLAN_ID 11)" +
+                "-> Queue" +
+                "-> ToDevice(p0);";
 
     static final String LAST_CLICK_INSTANCE_CONF =
             "require(package \"FTSFC\");" +
@@ -152,6 +159,25 @@ public class Agent {
                     "->VLANEncap(VLAN_ID %d)" +
                     "->Queue" +
                     "->ToDevice(p0)";
+
+    static final String FIXED_MIDDLE_INSTANCE_CONF =
+            "require(package \"FTSFC\");" +
+                    "FTControlElement(10001);" +
+                    "AddressInfo(sender 10.70.0.7);" +
+                    "FromDevice(p0)" +
+                    "->CheckIPHeader(14)" +
+                    "->IPFilter(allow src sender)" +
+                    "->Strip(14)" +
+                    "->se::FTStateElement(ID 2, F 1)" +
+                    "->cmb::Monitor(ID 1)" +
+                    "->[1]se;" +
+                    "se[1]" +
+                    "-> Queue" +
+                    "->ctr::Counter()" +
+                    "->StoreIPAddress(10.70.0.8, src)" +
+                    "->StoreIPAddress(10.70.0.9, dst)" +
+                    "->EtherEncap(0x0800, f4:52:14:5a:90:70, e4:1d:2d:13:9c:60)" +
+                    "->ToDevice(p0);";
 
     public static final int CMD_OFFSET = 0;
 
@@ -440,6 +466,7 @@ public class Agent {
 //
 //        return states;
 //    }
+
     public static void killMiddlebox() {
         ArrayList<String> commands = new ArrayList<>();
         commands.add("sudo");
@@ -456,10 +483,15 @@ public class Agent {
     public static void writeToFile(String path, long ... args) throws IOException {
         String str = getLogString(path, args);
 
-        FileWriter fw = new FileWriter(path, true);
-        BufferedWriter bw = new BufferedWriter(fw);
-        PrintWriter out = new PrintWriter(bw);
+        PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(path, true)));
+        out.println("this is the time stamps");
         out.println(str);
+        out.close();
+//
+//        FileWriter fw = new FileWriter(path, true);
+//        BufferedWriter bw = new BufferedWriter(fw);
+//        PrintWriter out = new PrintWriter(bw);
+//        out.println(str);
 //        File ff = new File(path);
 //        if (!ff.exists()) {
 //            Files.write(Paths.get(path), str.getBytes(), StandardOpenOption.CREATE);
