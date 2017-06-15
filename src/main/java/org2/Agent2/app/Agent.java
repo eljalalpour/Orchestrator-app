@@ -68,7 +68,7 @@ public class Agent {
                     "-> ap::FTAppenderElement(10)" +
                     "-> VLANDecap" +
                     "-> CheckIPHeader(14)" +
-                    "-> se::FTStateElement(ID 1, F 1)" +
+                    "-> se::FTStateElement(ID 0, F 1)" +
                     "-> CheckIPHeader(14)" +
                     "-> firewall;firewall[0]" +
                     "-> d :: Discard;firewall[1]" +
@@ -80,7 +80,7 @@ public class Agent {
                     "ip_from_extern[1] -> d;" +
                     "ip_from_extern[2] -> d;" +
                     "ip_from_extern[3]" +
-                    "-> mo::Monitor(ID 1);" +
+                    "-> mo::Monitor(ID 0);" +
                     "ip_from_extern[4]" +
                     "-> d;" +
                     "mo -> CheckIPHeader(14) -> [1]se;" +
@@ -117,25 +117,29 @@ public class Agent {
                     "->ToDevice(p0);";
 
     static final String FIXED_LAST_CLICK_INSTANCE_CONF =
-            "require(package \"FTSFC\");" +
-                    "FTControlElement(10001);" +
-                    "FromDevice(p0)" +
-                    "-> FTFilterElement(12)" +
-                    "-> CheckIPHeader(14)" +
-                    "-> se::FTStateElement(ID 1, F 1)" +
-                    "-> lna::nat(ID 3)" +
-                    "-> CheckIPHeader(14)" +
-                    "-> [1]se;se[1]" +
-                    "-> CheckIPHeader(14)" +
+            "require(package FTSFC); " +
+                    "FTControlElement(10001); " +
+                    "FromDevice(p0) " +
+                    "-> FTFilterElement(12) " +
+                    "-> VLANDecap " +
+                    "-> CheckIPHeader(14) " +
+                    "-> se::FTStateElement(ID 2, F 1) " +
+                    "-> CheckIPHeader(14) " +
+                    "-> lna::nat(ID 2) " +
+                    "-> CheckIPHeader(14) " +
+                    "-> [1]se;" +
+                    "se[1] " +
+                    "-> CheckIPHeader(14) " +
                     "-> be::FTBufferElement" +
-                    "-> VLANEncap(VLAN_ID 13)" +
                     "-> VLANEncap(VLAN_ID 13) " +
-                    "-> pe::FTPassElement;be[1]" +
-                    "-> VLANEncap(VLAN_ID 14)" +
-                    "-> VLANEncap(VLAN_ID 14)" +
+                    "-> VLANEncap(VLAN_ID 13)  " +
+                    "->pe::FTPassElement;" +
+                    "be[1] " +
+                    "-> VLANEncap(VLAN_ID 14) " +
+                    "-> VLANEncap(VLAN_ID 14) " +
                     "->[1]pe; " +
-                    "pe" +
-                    "->Queue" +
+                    "pe " +
+                    "->Queue " +
                     "->ToDevice(p0);";
 
     static final String DEF_CLICK_INSTANCE_CONF =
@@ -163,7 +167,7 @@ public class Agent {
                     "-> FTFilterElement(11)" +
                     "-> VLANDecap" +
                     "-> CheckIPHeader(14)" +
-                    "-> se::FTStateElement(ID 2, F 1)" +
+                    "-> se::FTStateElement(ID 1, F 1)" +
                     "-> cmb::Monitor(ID 1)" +
                     "-> CheckIPHeader(14)" +
                     "->[1]se;" +
