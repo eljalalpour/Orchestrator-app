@@ -451,6 +451,14 @@ public class OrchestratorApp {
 
         availableHosts.sort(new HostComparator());
 
+//        try {
+//            String str = "";
+//            PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter("/available-hosts.txt", true)));
+//            out.println(str);
+//            out.close();
+//        }
+//        catch()
+
         tagFlows = new HashMap<>();
 
         // Listen for failures
@@ -497,13 +505,8 @@ public class OrchestratorApp {
     public class HostComparator implements Comparator<Host> {
         @Override
         public int compare(Host o1, Host o2) {
-            int result = 0;
-            if (o1.id().hashCode() < o2.id().hashCode())
-                result = -1;
-            else if (o1.id().hashCode() > o2.id().hashCode())
-                result = 1;
-
-            return result;
+            return o1.ipAddresses().iterator().next().toString().compareTo(
+                    o2.ipAddresses().iterator().next().toString());
         }
     }
 
