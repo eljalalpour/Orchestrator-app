@@ -31,7 +31,7 @@ import static org.onlab.util.Tools.toHex;
 
 @Component(immediate = true)
 public class OrchestratorApp {
-    static final String RECOVERY_LOG_FILE = "recovery.orch.txt";
+    static final String RECOVERY_LOG_FILE = "/recovery.orch.txt";
     private static final int AGENT_PORT = 2222;
     private static final int FORWARD_PRIORITY = 15;
     private static byte tag = 10;
