@@ -1,6 +1,7 @@
 package org2.Orchestrator2.app;
 
 import com.esotericsoftware.minlog.Log;
+import com.sun.prism.shader.AlphaOne_Color_Loader;
 import org.apache.felix.scr.annotations.*;
 import org.onlab.packet.Ip4Address;
 import org.onlab.packet.VlanId;
@@ -364,6 +365,8 @@ public class OrchestratorApp {
 //                            log.info("Writing to file!!");
                             String str = Agent.getLogString(RECOVERY_LOG_FILE,
                                     start, end, beforeInit, afterInit, beforeReroute, afterReroute);
+                            Agent.writeToFile(RECOVERY_LOG_FILE,
+                                    start, end, beforeInit, afterInit, beforeReroute, afterReroute);
                             log.info(str);
                         }//try
                         catch (IOException e) {
@@ -446,7 +449,7 @@ public class OrchestratorApp {
             } catch (NoSuchElementException nse){ }
         }//for
 
-
+        availableHosts.sort(new HostComparator());
 
         tagFlows = new HashMap<>();
 
@@ -490,6 +493,19 @@ public class OrchestratorApp {
 //            }//switch
 //        }
 //    }
+
+    public class HostComparator implements Comparator<Host> {
+        @Override
+        public int compare(Host o1, Host o2) {
+            int result = 0;
+            if (o1.id().hashCode() < o2.id().hashCode())
+                result = -1;
+            else if (o1.id().hashCode() > o2.id().hashCode())
+                result = 1;
+
+            return result;
+        }
+    }
 
     private class InnerDeviceListener implements DeviceListener {
         @Override
