@@ -43,9 +43,9 @@ public class Agent {
                     "FTControlElement(%d);" +
                     "FromDevice(p0)" +
                     "->FTFilterElement(%d, %d)" +
-                    "->VLANDecap" +
-                    "->CheckIPHeader(14)" +
+                    "->CheckIPHeader(18)" +
                     "->FTAppenderElement(%d)" +
+                    "->VLANDecap" +
                     "->CheckIPHeader(14)" +
                     "->se::FTStateElement(ID %d, VLAN_ID %d, F %d)" +
                     "->CheckIPHeader(14)" +
