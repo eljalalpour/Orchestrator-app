@@ -49,7 +49,7 @@ public class Agent {
                     "->CheckIPHeader(14)" +
                     "->se::FTStateElement(ID %d, VLAN_ID %d, F %d)" +
                     "->CheckIPHeader(14)" +
-                    "->MB%d::ArrCounterMB(%d, 1)" +
+                    "->MB%d::CounterMB(ID %d)" +
                     "->CheckIPHeader(14)" +
                     "->[1]se;" +
                     "se[1]" +
@@ -99,7 +99,7 @@ public class Agent {
                     "->CheckIPHeader(14)" +
                     "->se::FTStateElement(ID %d, VLAN_ID %d, F %d)" +
                     "->CheckIPHeader(14)" +
-                    "->MB%d::ArrCounterMB(%d, 1)" +
+                    "->MB%d::CounterMB(ID %d, 1)" +
                     "->CheckIPHeader(14)" +
                     "->[1]se;" +
                     "se[1]" +
