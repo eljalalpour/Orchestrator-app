@@ -151,7 +151,7 @@ public class Agent {
                     "->MarkIPHeader(14)" +
                     "->se::FTStateElement(ID %d, VLAN_ID %d, F %d)" +
                     "->MarkIPHeader(14)" +
-                    "->MB%d::ArrCounterMB(%d, 128)" +
+                    "->MB%d::ArrCounterMB(%d, 2)" +
                     "->MarkIPHeader(14)" +
                     "->[1]se;" +
                     "se[1]" +
