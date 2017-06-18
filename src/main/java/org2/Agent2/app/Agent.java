@@ -213,54 +213,54 @@ public class Agent {
         if (chainPos == 0) {
 //            System.out.println("At the beginning of the chain\n");
 //            System.out.printf("firstVlanId: %d, chain-length: %d\n", firstVlanId, chainLength);
-            command = String.format(FIRST_CLICK_INSTANCE_CONF,
-                    CLICK_INS_PORT,
-                    firstVlanId + chainPos,
-                    firstVlanId + chainLength + 1,
-                    firstVlanId + chainPos,
-                    id,
-                    firstVlanId + chainPos,
-                    failureCount,
-                    middlebox,
-                    id,
-                    firstVlanId + chainPos + 1,
-                    firstVlanId + chainPos + 1
-            );
-            //command = FIXED_FIRST_CLICK_INSTANCE_CONF;
+//            command = String.format(FIRST_CLICK_INSTANCE_CONF,
+//                    CLICK_INS_PORT,
+//                    firstVlanId + chainPos,
+//                    firstVlanId + chainLength + 1,
+//                    firstVlanId + chainPos,
+//                    id,
+//                    firstVlanId + chainPos,
+//                    failureCount,
+//                    middlebox,
+//                    id,
+//                    firstVlanId + chainPos + 1,
+//                    firstVlanId + chainPos + 1
+//            );
+            command = FIXED_FIRST_CLICK_INSTANCE_CONF;
         }//if
         else if (chainPos == (chainLength - 1)) {
 //            System.out.println("At the end of the chain\n");
 //            System.out.printf("firstVlanId: %d, chain-length: %d\n", firstVlanId, chainLength);
-            command = String.format(LAST_CLICK_INSTANCE_CONF,
-                    CLICK_INS_PORT,
-                    firstVlanId + chainPos,
-                    id,
-                    firstVlanId + chainPos,
-                    failureCount,
-                    middlebox,
-                    id,
-                    firstVlanId + chainPos + 1,
-                    firstVlanId + chainPos + 1,
-                    firstVlanId + chainPos + 2,
-                    firstVlanId + chainPos + 2
-            );
-            //command = FIXED_LAST_CLICK_INSTANCE_CONF;
+//            command = String.format(LAST_CLICK_INSTANCE_CONF,
+//                    CLICK_INS_PORT,
+//                    firstVlanId + chainPos,
+//                    id,
+//                    firstVlanId + chainPos,
+//                    failureCount,
+//                    middlebox,
+//                    id,
+//                    firstVlanId + chainPos + 1,
+//                    firstVlanId + chainPos + 1,
+//                    firstVlanId + chainPos + 2,
+//                    firstVlanId + chainPos + 2
+//            );
+            command = FIXED_LAST_CLICK_INSTANCE_CONF;
         }//else if
         else {
 //            System.out.println("At the middle of the chain\n");
 //            System.out.printf("firstVlanId: %d, chain-length: %d\n", firstVlanId, chainLength);
-            command = String.format(DEF_CLICK_INSTANCE_CONF,
-                    CLICK_INS_PORT,
-                    firstVlanId + chainPos,
-                    id,
-                    firstVlanId + chainPos,
-                    failureCount,
-                    middlebox,
-                    id,
-                    firstVlanId + chainPos + 1,
-                    firstVlanId + chainPos + 1
-            );
-            //command = FIXED_MIDDLE_INSTANCE_CONF;
+//            command = String.format(DEF_CLICK_INSTANCE_CONF,
+//                    CLICK_INS_PORT,
+//                    firstVlanId + chainPos,
+//                    id,
+//                    firstVlanId + chainPos,
+//                    failureCount,
+//                    middlebox,
+//                    id,
+//                    firstVlanId + chainPos + 1,
+//                    firstVlanId + chainPos + 1
+//            );
+            command = FIXED_MIDDLE_INSTANCE_CONF;
         }//else
 
         return command;
