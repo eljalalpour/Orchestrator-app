@@ -31,7 +31,7 @@ import static org.onlab.util.Tools.toHex;
 
 @Component(immediate = true)
 public class OrchestratorApp {
-    static final String RECOVERY_LOG_FILE = "/orch.monitor.txt";
+    static final String RECOVERY_LOG_FILE = "/geo.dist.orch.5.txt";
     private static final int AGENT_PORT = 2222;
     private static final int FORWARD_PRIORITY = 15;
     private static byte tag = 10;
@@ -424,14 +424,16 @@ public class OrchestratorApp {
 //            privateToPublicAddresses.put(InetAddress.getByName("192.168.200.11"), InetAddress.getByName("10.12.4.11"));
 
             //privateToPublicAddresses.put(InetAddress.getByName("192.168.201.3"), InetAddress.getByName("10.12.4.20"));
-            privateToPublicAddresses.put(InetAddress.getByName("192.168.201.4"), InetAddress.getByName("10.12.4.21"));
-            privateToPublicAddresses.put(InetAddress.getByName("192.168.201.2"), InetAddress.getByName("10.12.4.22"));
+            privateToPublicAddresses.put(InetAddress.getByName("192.168.201.4"), InetAddress.getByName("10.6.4.3"));
+            privateToPublicAddresses.put(InetAddress.getByName("192.168.201.5"), InetAddress.getByName("10.4.4.3"));
+            privateToPublicAddresses.put(InetAddress.getByName("192.168.201.9"), InetAddress.getByName("10.6.4.4"));
+            privateToPublicAddresses.put(InetAddress.getByName("192.168.201.7"), InetAddress.getByName("10.4.4.4"));
             privateToPublicAddresses.put(InetAddress.getByName("192.168.201.17"), InetAddress.getByName("10.12.4.19"));
             privateToPublicAddresses.put(InetAddress.getByName("192.168.201.18"), InetAddress.getByName("10.12.4.19"));
             //privateToPublicAddresses.put(InetAddress.getByName("192.168.201.6"), InetAddress.getByName("10.12.4.11"));
             //privateToPublicAddresses.put(InetAddress.getByName("192.168.201.5"), InetAddress.getByName("10.12.4.12"));
-            privateToPublicAddresses.put(InetAddress.getByName("192.168.201.8"), InetAddress.getByName("10.4.4.3"));
-            privateToPublicAddresses.put(InetAddress.getByName("192.168.201.7"), InetAddress.getByName("10.6.4.3"));
+            privateToPublicAddresses.put(InetAddress.getByName("192.168.201.8"), InetAddress.getByName("10.12.4.22"));
+            privateToPublicAddresses.put(InetAddress.getByName("192.168.201.2"), InetAddress.getByName("10.12.4.21"));
 
         }catch (UnknownHostException uhExc){
             uhExc.printStackTrace();
