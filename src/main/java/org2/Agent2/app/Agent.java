@@ -458,57 +458,85 @@ public class Agent {
 
     public static void main (String args[]) {
             Agent agent = new Agent();
-            ServerSocket serverSocket;
-            try {
-                serverSocket = new ServerSocket(DEFAULT_AGENT_PORT, 0);
-            }//try
-            catch (IOException e) {
-                System.out.println(e);
-                return;
-            }//catch
-            while (true) {
-                try {
-                    clientSocket = serverSocket.accept();
-                    clientSocket.setTcpNoDelay(true);
-                    InputStream is = clientSocket.getInputStream();
-                    byte[] bytes = new byte[1024];
-                    is.read(bytes);
+            String firewall="firewall :: Classifier(12/0806 20/0001, 12/0806 20/0002, 12/0800, -);ap::FTAppenderElement;FromDevice(p1p1)-> MarkIPHeader(14)->fil::IPClassifier(src host 192.168.233.6,src host 192.168.233.9,-);fil[0]-> MarkIPHeader(14)-> [0]ap;fil[1]-> MarkIPHeader(14)-> [1]ap;fil[2]-> Discard;ap-> MarkIPHeader(14)-> se::FTStateElement(ID 0, F 1)-> MarkIPHeader(14)-> firewall;firewall[0] -> Discard;firewall[1] -> Discard;firewall[3] -> Discard;ip_from_extern :: IPClassifier(dst tcp ssh,dst tcp www or https,src tcp port ftp,tcp or udp,-);firewall[2]-> MarkIPHeader(14)-> ip_from_extern;ip_from_extern[0] -> Discard;ip_from_extern[1] -> Discard;ip_from_extern[2] -> Discard;ip_from_extern[4] -> Discard;ip_from_extern[3]-> MarkIPHeader(14)-> [1]se;se[1]-> MarkIPHeader(14)-> Queue()->StoreIPAddress(192.168.233.7, src)-> StoreIPAddress(192.168.233.8, dst)-> StoreEtherAddress(0c:c4:7a:73:fa:54, src)-> StoreEtherAddress(0c:c4:7a:73:fa:6a, dst)-> ToDevice(p1p1);";
+            String monitor="AddressInfo(sender 192.168.233.7);FromDevice(p1p1)-> MarkIPHeader(14)-> IPFilter(allow src sender)-> MarkIPHeader(14)-> se::FTStateElement(ID 1, F 1)-> MarkIPHeader(14)-> Monitor(ID 1)-> MarkIPHeader(14)-> [1]se;se[1]-> MarkIPHeader(14)-> StoreIPAddress(192.168.233.8, src)-> Queue()->StoreIPAddress(192.168.233.9, dst)-> StoreEtherAddress(0c:c4:7a:73:fa:6a, src)-> StoreEtherAddress(0c:c4:7a:73:f9:ec, dst)-> ToDevice(p1p1);";
+            String nat="AddressInfo(sender 192.168.233.8);FromDevice(0)-> MarkIPHeader(14)-> IPFilter(allow src sender)-> MarkIPHeader(14)-> se::FTStateElement(ID 2, F 1);se[0]-> MarkIPHeader(14)-> lnat::nat(ID 2)-> MarkIPHeader(14)-> [1]se;se[1]-> MarkIPHeader(14)-> StoreIPAddress(192.168.233.9, src)-> StoreEtherAddress(0c:c4:7a:73:f9:ec, src)-> MarkIPHeader(14)-> be::FTBufferElement;be[0]-> MarkIPHeader(14)-> Queue()->StoreIPAddress(192.168.233.6, dst)-> StoreEtherAddress(0c:c4:7a:73:fa:46, dst)-> ToDevice(p1p1);be[1]-> MarkIPHeader(14)-> StoreIPAddress(192.168.233.7, dst)-> StoreEtherAddress(0c:c4:7a:73:fa:54, dst)-> ToDevice(p1p1);";
+//            ServerSocket serverSocket;
+//            try {
+//                serverSocket = new ServerSocket(DEFAULT_AGENT_PORT, 0);
+//            }//try
+//            catch (IOException e) {
+//                System.out.println(e);
+//                return;
+//            }//catch
+//            while (true) {
+//                try {
+//                    clientSocket = serverSocket.accept();
+//                    clientSocket.setTcpNoDelay(true);
+//                    InputStream is = clientSocket.getInputStream();
+//                    byte[] bytes = new byte[1024];
+//                    is.read(bytes);
+//
+//                    if (bytes.length > 0) {
+//                        switch (bytes[CMD_OFFSET]) {
+//                            case Commands.MB_INIT:
+//                                System.out.println("Received init command\n");
+//                                agent.handleInit(false, bytes);
+//                                break;
+//
+//                            case Commands.MB_INIT_AND_FETCH_STATE:
+//                                System.out.println("Received init and fetch state command\n");
+//                                agent.handleInit(true, bytes);
+//                                break;
+//
+//                            case Commands.GET_STATE:
+//                                System.out.println("Received get command\n");
+//                                byte[] states = agent.handleGetState(bytes);
+//                                OutputStream out = clientSocket.getOutputStream();
+//                                out.write(states.length);
+//                                out.write(states, 0, states.length);
+//                                out.flush();
+//                                break;
+//
+//                            case Commands.KILL_MIDDLEBOX:
+//                                System.out.println("Received kill middlebox command\n");
+//                                killMiddlebox();
+//
+//                            default:
+//                                //TODO: Appropriate action when the command is not known
+//                                break;
+//                        }//switch
+//                    }//if
+//                }//try
+//                catch (IOException ioExc) {
+//                    ioExc.printStackTrace();
+//                    return;
+//                }//catch
+//            }//while
+        long beforeInit, afterInit, beforeFetch, afterFetch, end;
+        beforeInit = afterInit = beforeFetch = afterFetch = end = 0;
 
-                    if (bytes.length > 0) {
-                        switch (bytes[CMD_OFFSET]) {
-                            case Commands.MB_INIT:
-                                System.out.println("Received init command\n");
-                                agent.handleInit(false, bytes);
-                                break;
 
-                            case Commands.MB_INIT_AND_FETCH_STATE:
-                                System.out.println("Received init and fetch state command\n");
-                                agent.handleInit(true, bytes);
-                                break;
+        beforeInit = System.nanoTime();
+        ArrayList<String> commands = new ArrayList<>();
+        commands.add("sudo");
+        commands.add("click");
+        commands.add("-e");
+        commands.add(firewall);
 
-                            case Commands.GET_STATE:
-                                System.out.println("Received get command\n");
-                                byte[] states = agent.handleGetState(bytes);
-                                OutputStream out = clientSocket.getOutputStream();
-                                out.write(states.length);
-                                out.write(states, 0, states.length);
-                                out.flush();
-                                break;
+        ProcessBuilder processBuilder = new ProcessBuilder(commands);
 
-                            case Commands.KILL_MIDDLEBOX:
-                                System.out.println("Received kill middlebox command\n");
-                                killMiddlebox();
-
-                            default:
-                                //TODO: Appropriate action when the command is not known
-                                break;
-                        }//switch
-                    }//if
-                }//try
-                catch (IOException ioExc) {
-                    ioExc.printStackTrace();
-                    return;
-                }//catch
-            }//while
+        Process p = null;
+        try {
+            p = processBuilder.start();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        StreamGobbler errorGobbler = new StreamGobbler(p.getErrorStream());
+        StreamGobbler outputGobbler = new StreamGobbler(p.getInputStream());
+        errorGobbler.start();
+        outputGobbler.start();
+        afterInit = System.nanoTime();
+        System.out.println(afterInit-beforeInit);
     }
 }
