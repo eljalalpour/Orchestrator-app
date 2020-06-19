@@ -7,12 +7,10 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="Orchestrator-app" />
-        <module name="Orchestrator2-app" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="Orchestrator-app" target="1.8" />
-      <module name="Orchestrator2-app" target="1.8" />
     </bytecodeTargetLevel>
   </component>
 </project>
