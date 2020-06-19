@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="BranchesTreeState">
+    <expand>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="LOCAL_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="GROUP_NODE:origin" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+    </expand>
+    <select />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="99d59a49-0acc-4da7-abee-e68b7ced5a29" name="Default" comment="removed .idea from repo">
+      <change beforePath="$PROJECT_DIR$/.idea/jarRepositories.xml" beforeDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectId" id="1dVx3HawACxmcb0vrTnhIqz4AAS" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="true" />
+    <property name="aspect.path.notification.shown" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="nodejs_package_manager_path" value="npm" />
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="99d59a49-0acc-4da7-abee-e68b7ced5a29" name="Default" comment="" />
+      <created>1592522406165</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1592522406165</updated>
+      <workItem from="1592523878179" duration="3153000" />
+    </task>
+    <task id="LOCAL-00001" summary="clean the repo&#10;&#10;-- remove commented lines&#10;-- rename the org2, orchestrator2 and agent2 to org, orchestrator and agent respectively">
+      <created>1592526683051</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1592526683051</updated>
+    </task>
+    <task id="LOCAL-00002" summary="removed .idea from repo">
+      <created>1592526775807</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1592526775807</updated>
+    </task>
+    <task id="LOCAL-00003" summary="removed .idea from repo">
+      <created>1592526864772</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1592526864772</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="2" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="clean the repo&#10;&#10;-- remove commented lines&#10;-- rename the org2, orchestrator2 and agent2 to org, orchestrator and agent respectively" />
+    <MESSAGE value="removed .idea from repo" />
+    <option name="LAST_COMMIT_MESSAGE" value="removed .idea from repo" />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="278" y="168" key="MultipleFileMergeDialog" timestamp="1592526916324">
+      <screen x="0" y="0" width="1280" height="800" />
+    </state>
+    <state x="278" y="168" key="MultipleFileMergeDialog/0.0.1280.800@0.0.1280.800" timestamp="1592526916324" />
+    <state x="266" y="109" key="RollbackChangesDialog" timestamp="1592524131781">
+      <screen x="0" y="0" width="1280" height="800" />
+    </state>
+    <state x="266" y="109" key="RollbackChangesDialog/0.0.1280.800@0.0.1280.800" timestamp="1592524131781" />
+    <state x="240" y="140" key="Vcs.Push.Dialog.v2" timestamp="1592526933038">
+      <screen x="0" y="0" width="1280" height="800" />
+    </state>
+    <state x="240" y="140" key="Vcs.Push.Dialog.v2/0.0.1280.800@0.0.1280.800" timestamp="1592526933038" />
+    <state x="341" y="32" width="598" height="735" key="find.popup" timestamp="1592524455716">
+      <screen x="0" y="0" width="1280" height="800" />
+    </state>
+    <state x="341" y="32" width="598" height="735" key="find.popup/0.0.1280.800@0.0.1280.800" timestamp="1592524455716" />
+  </component>
+</project>
