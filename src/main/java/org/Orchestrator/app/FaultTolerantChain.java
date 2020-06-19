@@ -1,4 +1,4 @@
-package org2.Orchestrator2.app;
+package org.Orchestrator.app;
 
 import org.onosproject.net.Host;
 
@@ -21,7 +21,7 @@ public class FaultTolerantChain {
             throws InvalidParameterException {
         this.source = source;
         this.destination = destination;
-        if (!checkForFaultTolerance(f, (byte)MBs.size()))
+        if (!checkForFaultTolerance(f, (byte) MBs.size()))
             throw new InvalidParameterException(String.format("The chain with the length of %d is not long enough " +
                     "to tolerate %d failures!", f, MBs.size()));
 
@@ -50,10 +50,6 @@ public class FaultTolerantChain {
     public void setChainId(int chainId) {
         this.chainId = chainId;
     }
-
-//    public ArrayList<Host> getReplicaMapping() {
-//        return replicaMapping;
-//    }
 
 
     public ArrayList<Host> getReplicaMapping() {
@@ -95,7 +91,7 @@ public class FaultTolerantChain {
     public ArrayList<Host> getChainHosts() {
         ArrayList<Host> chainHosts = new ArrayList<Host>();
         chainHosts.add(source);
-        for (byte i=0; i < replicaMapping.size(); ++i){
+        for (byte i = 0; i < replicaMapping.size(); ++i) {
             chainHosts.add(replicaMapping.get(i));
         }
         chainHosts.add(destination);

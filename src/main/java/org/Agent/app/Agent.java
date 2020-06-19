@@ -1,15 +1,12 @@
-package org2.Agent2.app;
+package org.Agent.app;
 
-import org2.Orchestrator2.app.Commands;
+import org.Orchestrator.app.Commands;
 
-import java.net.InetAddress;
 import java.io.*;
-import java.net.ServerSocket;
+import java.net.InetAddress;
 import java.net.Socket;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+
 class StreamGobbler extends Thread {
     InputStream is;
 
@@ -23,7 +20,7 @@ class StreamGobbler extends Thread {
             InputStreamReader isr = new InputStreamReader(is);
             BufferedReader br = new BufferedReader(isr);
             String line = null;
-            while ( (line = br.readLine()) != null)
+            while ((line = br.readLine()) != null)
                 System.out.println(line);
         } catch (IOException ioe) {
             ioe.printStackTrace();
@@ -196,7 +193,7 @@ public class Agent {
     }
 
     private static byte whoToAsk(byte f, byte n, byte i, byte chainPos) {
-        return (byte)((chainPos - f + i + n) % n);
+        return (byte) ((chainPos - f + i + n) % n);
     }
 
     private void setValues(byte[] bytes) {
@@ -269,7 +266,7 @@ public class Agent {
     public void fetchState(byte chainPos, byte n, byte f) {
         byte[] whoToAsk = new byte[n];
         for (byte i = 0; i < n; i++) whoToAsk[i] = i;
-        whoToAsk[chainPos] = (byte)((chainPos + 1) % n);
+        whoToAsk[chainPos] = (byte) ((chainPos + 1) % n);
         boolean[] successes = new boolean[f + 1];
         FetchStateThread[] threads = new FetchStateThread[f + 1];
     }
@@ -315,7 +312,7 @@ public class Agent {
             byte chainPos = Commands.parseChainPosFromInitCommand(bytes);
 
             byte f = Commands.parseF(bytes);
-            byte n = (byte)Commands.parseChainLength(bytes);
+            byte n = (byte) Commands.parseChainLength(bytes);
             int[] whoToAsk = new int[f + 1];
             for (byte i = 0; i < whoToAsk.length; ++i) whoToAsk[i] = whoToAsk(f, n, i, chainPos);
             whoToAsk[f] = (chainPos + 1) % n;
@@ -329,7 +326,7 @@ public class Agent {
                     if (successes[i]) continue;
 
                     threads[i] = new FetchStateThread(inetAddresses.get(whoToAsk[i]),
-                            DEFAULT_AGENT_PORT, (byte)((chainPos -f + i) % n));
+                            DEFAULT_AGENT_PORT, (byte) ((chainPos - f + i) % n));
                     threads[i].start();
                 }//for
 
@@ -340,20 +337,20 @@ public class Agent {
                         threads[i].join();
                         successes[i] = threads[i].getSuccess();
                         if (successes[i]) {
-                            putState((byte)((chainPos - f + i) % n),
+                            putState((byte) ((chainPos - f + i) % n),
                                     threads[i].getMBState());
                         }//if
                         else {
-                            whoToAsk[i] = (byte)(whoToAsk[i] + 1) % n;
+                            whoToAsk[i] = (byte) (whoToAsk[i] + 1) % n;
                         }//else
                     }//try
-                    catch(InterruptedException iExc) {
+                    catch (InterruptedException iExc) {
                         iExc.printStackTrace();
                     }//catch
                 }//for
 
             }//do
-            while(!allSet(successes));//while
+            while (!allSet(successes));//while
 
             afterFetch = System.nanoTime();
 
@@ -362,7 +359,7 @@ public class Agent {
                 System.out.println(str);
                 Agent.writeToFile(RECOVERY_LOG_FILE, start, end, beforeInit, afterInit, beforeFetch, afterFetch);
             }//try
-            catch(IOException exc) {
+            catch (IOException exc) {
                 System.out.print(exc.getMessage());
             }//catch
         }//if
@@ -395,7 +392,7 @@ public class Agent {
             in.close();
             socket.close();
         }//try
-        catch(IOException ioExc) {
+        catch (IOException ioExc) {
             ioExc.printStackTrace();
         }//catch
 
@@ -412,7 +409,7 @@ public class Agent {
             out.flush();
             out.close();
         }//try
-        catch(IOException ioExc) {
+        catch (IOException ioExc) {
             ioExc.printStackTrace();
         }//catch
     }
@@ -438,14 +435,14 @@ public class Agent {
         }
     }
 
-    public static void writeToFile(String path, long ... args) throws IOException {
+    public static void writeToFile(String path, long... args) throws IOException {
         String str = getLogString(path, args);
         PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(path, true)));
         out.println(str);
         out.close();
     }
 
-    public static String getLogString(String path, long ... args) throws IOException {
+    public static String getLogString(String path, long... args) throws IOException {
         String str = "";
         for (int i = 0; i < args.length - 1; ++i) {
             str += Long.toString(args[i]) + ",";
@@ -456,11 +453,11 @@ public class Agent {
         return str;
     }
 
-    public static void main (String args[]) {
-            Agent agent = new Agent();
-            String firewall="firewall :: Classifier(12/0806 20/0001, 12/0806 20/0002, 12/0800, -);ap::FTAppenderElement;FromDevice(p1p1)-> MarkIPHeader(14)->fil::IPClassifier(src host 192.168.233.6,src host 192.168.233.9,-);fil[0]-> MarkIPHeader(14)-> [0]ap;fil[1]-> MarkIPHeader(14)-> [1]ap;fil[2]-> Discard;ap-> MarkIPHeader(14)-> se::FTStateElement(ID 0, F 1)-> MarkIPHeader(14)-> firewall;firewall[0] -> Discard;firewall[1] -> Discard;firewall[3] -> Discard;ip_from_extern :: IPClassifier(dst tcp ssh,dst tcp www or https,src tcp port ftp,tcp or udp,-);firewall[2]-> MarkIPHeader(14)-> ip_from_extern;ip_from_extern[0] -> Discard;ip_from_extern[1] -> Discard;ip_from_extern[2] -> Discard;ip_from_extern[4] -> Discard;ip_from_extern[3]-> MarkIPHeader(14)-> [1]se;se[1]-> MarkIPHeader(14)-> Queue()->StoreIPAddress(192.168.233.7, src)-> StoreIPAddress(192.168.233.8, dst)-> StoreEtherAddress(0c:c4:7a:73:fa:54, src)-> StoreEtherAddress(0c:c4:7a:73:fa:6a, dst)-> ToDevice(p1p1);";
-            String monitor="AddressInfo(sender 192.168.233.7);FromDevice(p1p1)-> MarkIPHeader(14)-> IPFilter(allow src sender)-> MarkIPHeader(14)-> se::FTStateElement(ID 1, F 1)-> MarkIPHeader(14)-> Monitor(ID 1)-> MarkIPHeader(14)-> [1]se;se[1]-> MarkIPHeader(14)-> StoreIPAddress(192.168.233.8, src)-> Queue()->StoreIPAddress(192.168.233.9, dst)-> StoreEtherAddress(0c:c4:7a:73:fa:6a, src)-> StoreEtherAddress(0c:c4:7a:73:f9:ec, dst)-> ToDevice(p1p1);";
-            String nat="AddressInfo(sender 192.168.233.8);FromDevice(0)-> MarkIPHeader(14)-> IPFilter(allow src sender)-> MarkIPHeader(14)-> se::FTStateElement(ID 2, F 1);se[0]-> MarkIPHeader(14)-> lnat::nat(ID 2)-> MarkIPHeader(14)-> [1]se;se[1]-> MarkIPHeader(14)-> StoreIPAddress(192.168.233.9, src)-> StoreEtherAddress(0c:c4:7a:73:f9:ec, src)-> MarkIPHeader(14)-> be::FTBufferElement;be[0]-> MarkIPHeader(14)-> Queue()->StoreIPAddress(192.168.233.6, dst)-> StoreEtherAddress(0c:c4:7a:73:fa:46, dst)-> ToDevice(p1p1);be[1]-> MarkIPHeader(14)-> StoreIPAddress(192.168.233.7, dst)-> StoreEtherAddress(0c:c4:7a:73:fa:54, dst)-> ToDevice(p1p1);";
+    public static void main(String args[]) {
+        Agent agent = new Agent();
+        String firewall = "firewall :: Classifier(12/0806 20/0001, 12/0806 20/0002, 12/0800, -);ap::FTAppenderElement;FromDevice(p1p1)-> MarkIPHeader(14)->fil::IPClassifier(src host 192.168.233.6,src host 192.168.233.9,-);fil[0]-> MarkIPHeader(14)-> [0]ap;fil[1]-> MarkIPHeader(14)-> [1]ap;fil[2]-> Discard;ap-> MarkIPHeader(14)-> se::FTStateElement(ID 0, F 1)-> MarkIPHeader(14)-> firewall;firewall[0] -> Discard;firewall[1] -> Discard;firewall[3] -> Discard;ip_from_extern :: IPClassifier(dst tcp ssh,dst tcp www or https,src tcp port ftp,tcp or udp,-);firewall[2]-> MarkIPHeader(14)-> ip_from_extern;ip_from_extern[0] -> Discard;ip_from_extern[1] -> Discard;ip_from_extern[2] -> Discard;ip_from_extern[4] -> Discard;ip_from_extern[3]-> MarkIPHeader(14)-> [1]se;se[1]-> MarkIPHeader(14)-> Queue()->StoreIPAddress(192.168.233.7, src)-> StoreIPAddress(192.168.233.8, dst)-> StoreEtherAddress(0c:c4:7a:73:fa:54, src)-> StoreEtherAddress(0c:c4:7a:73:fa:6a, dst)-> ToDevice(p1p1);";
+        String monitor = "AddressInfo(sender 192.168.233.7);FromDevice(p1p1)-> MarkIPHeader(14)-> IPFilter(allow src sender)-> MarkIPHeader(14)-> se::FTStateElement(ID 1, F 1)-> MarkIPHeader(14)-> Monitor(ID 1)-> MarkIPHeader(14)-> [1]se;se[1]-> MarkIPHeader(14)-> StoreIPAddress(192.168.233.8, src)-> Queue()->StoreIPAddress(192.168.233.9, dst)-> StoreEtherAddress(0c:c4:7a:73:fa:6a, src)-> StoreEtherAddress(0c:c4:7a:73:f9:ec, dst)-> ToDevice(p1p1);";
+        String nat = "AddressInfo(sender 192.168.233.8);FromDevice(0)-> MarkIPHeader(14)-> IPFilter(allow src sender)-> MarkIPHeader(14)-> se::FTStateElement(ID 2, F 1);se[0]-> MarkIPHeader(14)-> lnat::nat(ID 2)-> MarkIPHeader(14)-> [1]se;se[1]-> MarkIPHeader(14)-> StoreIPAddress(192.168.233.9, src)-> StoreEtherAddress(0c:c4:7a:73:f9:ec, src)-> MarkIPHeader(14)-> be::FTBufferElement;be[0]-> MarkIPHeader(14)-> Queue()->StoreIPAddress(192.168.233.6, dst)-> StoreEtherAddress(0c:c4:7a:73:fa:46, dst)-> ToDevice(p1p1);be[1]-> MarkIPHeader(14)-> StoreIPAddress(192.168.233.7, dst)-> StoreEtherAddress(0c:c4:7a:73:fa:54, dst)-> ToDevice(p1p1);";
 //            ServerSocket serverSocket;
 //            try {
 //                serverSocket = new ServerSocket(DEFAULT_AGENT_PORT, 0);
@@ -537,6 +534,6 @@ public class Agent {
         errorGobbler.start();
         outputGobbler.start();
         afterInit = System.nanoTime();
-        System.out.println(afterInit-beforeInit);
+        System.out.println(afterInit - beforeInit);
     }
 }

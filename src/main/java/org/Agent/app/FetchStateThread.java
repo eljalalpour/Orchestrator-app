@@ -1,6 +1,6 @@
-package org2.Agent2.app;
+package org.Agent.app;
 
-import org2.Orchestrator2.app.Commands;
+import org.Orchestrator.app.Commands;
 
 import java.net.InetAddress;
 import java.io.IOException;
@@ -22,13 +22,14 @@ public class FetchStateThread extends Thread {
 
     /**
      * Initialize FetchStateThread
+     *
      * @param ipAddr The ip address of the agent
-     * @param port The port on which the agent listens
-     * @param mbId The type of the middlebox whose state will be fetched
+     * @param port   The port on which the agent listens
+     * @param mbId   The type of the middlebox whose state will be fetched
      */
     public FetchStateThread(InetAddress ipAddr, int port, byte mbId) {
         this.ipAddr = ipAddr;
-        this.port   = port;
+        this.port = port;
         this.mbId = mbId;
         this.success = false;
     }
@@ -52,11 +53,11 @@ public class FetchStateThread extends Thread {
 
             success = true;
         }//try
-        catch(SocketTimeoutException stExc) {
+        catch (SocketTimeoutException stExc) {
             success = false;
             MBState = null;
         }//catch
-        catch(IOException ioExc) {
+        catch (IOException ioExc) {
             ioExc.printStackTrace();
         }//catch
     }

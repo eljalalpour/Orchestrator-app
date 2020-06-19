@@ -1,4 +1,4 @@
-package org2.Orchestrator2.app;
+package org.Orchestrator.app;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -35,6 +35,7 @@ public class Commands {
 
     /**
      * Creating the byte stream of a get-state-command
+     *
      * @param middlebox The type of the middlebox
      * @return The byte stream of the get-command
      */
@@ -49,11 +50,12 @@ public class Commands {
      * The format of message is as follows
      * Command Middlebox ChainPos F FirstVLANTag ChainLength IP1  IP2  ...
      * 0       1         2        3 4            5           6        10       4 + ChainLength * 4
-     * @param command Either initialize Commands.MB_INIT or Commands.MB_INIT_AND_FETCH_STATE
+     *
+     * @param command   Either initialize Commands.MB_INIT or Commands.MB_INIT_AND_FETCH_STATE
      * @param middleBox The middlebox that the agent should initialize inside the click-instance
-     * @param chainPos The position of the middlebox in the chain
-     * @param vlanTag The Vlan tag is used for routing
-     * @param chain The chain
+     * @param chainPos  The position of the middlebox in the chain
+     * @param vlanTag   The Vlan tag is used for routing
+     * @param chain     The chain
      * @return The byte string of the command
      */
     public static byte[] getInitCommand(byte command, byte middleBox,
@@ -68,11 +70,11 @@ public class Commands {
         buffer.put(chainPos);
         buffer.put(chain.getF());
         buffer.put(vlanTag);
-        buffer.put((byte)chain.length());
+        buffer.put((byte) chain.length());
 
         // If the command include fetch state, then the orchestrator has to provide the IP addresses of the other agents
         if (command == Commands.MB_INIT_AND_FETCH_STATE) {
-            for (int i = 0; i < chain.replicaMapping.size(); ++i){
+            for (int i = 0; i < chain.replicaMapping.size(); ++i) {
                 buffer.put(chain.replicaMapping.get(i).ipAddresses().iterator().next().toOctets());
             }//for
         }//if
@@ -84,8 +86,9 @@ public class Commands {
      * The format of the message is as follows
      * Command ChainPos StateSize State
      * 0       1        2         6
+     *
      * @param chainPos The id of the middlebox whose state will be sent
-     * @param state The state of the middlebox
+     * @param state    The state of the middlebox
      * @return The byte string of the command
      */
     public static byte[] getPutCommand(byte chainPos, byte[] state, int offset, int length) {
@@ -102,28 +105,6 @@ public class Commands {
     public static byte[] getPutCommand(byte chainPos, byte[] state) {
         return getPutCommand(chainPos, state, 0, state.length);
     }
-
-    /**
-     * Parses an init response
-     * @param bytes the byte stream of the init response
-     * @return A pair of byte (i.e., a middlebox that must be initialized) and a FaultTolerantChain.
-     */
-//    public static FaultTolerantChain parseChainFromInitCommand(byte[] bytes) {
-//        byte firstVlanTag = bytes[FIRST_VLAN_TAG_OFFSET];
-//        byte f = bytes[F_OFFSET];
-//        byte ipsLen = bytes[CHAIN_LENGTH_OFFSET];
-//
-//        FaultTolerantChain chain = new FaultTolerantChain();
-//        chain.setF(f);
-//        chain.setFirstTag(firstVlanTag);
-//
-//        for (byte i = 0; i < ipsLen; ++i) {
-//            chain.appendToChain(bytes[i * REPLICA_LEN + FIRST_IP_OFFSET + IP_LEN]);
-//            chain.replicaMapping.add(Ip4Address.valueOf(bytes, i * REPLICA_LEN + FIRST_IP_OFFSET));
-//        }//for
-//
-//        return chain;
-//    }
 
     public static byte parseFirstVlanTag(byte[] bytes) {
         return bytes[FIRST_VLAN_TAG_OFFSET];
@@ -147,7 +128,7 @@ public class Commands {
                 IpAddresses.add(InetAddress.getByAddress(buffer.array()));
             }//for
         }//try
-        catch(UnknownHostException uhExc) {
+        catch (UnknownHostException uhExc) {
             uhExc.printStackTrace();
         }//catch
         return IpAddresses;
@@ -155,6 +136,7 @@ public class Commands {
 
     /**
      * Parsing the middlebox from the init command
+     *
      * @param bytes the byte-stream of the init command
      * @return a byte representing the middlebox
      */
@@ -164,6 +146,7 @@ public class Commands {
 
     /**
      * Parsing the chain-position from the init command
+     *
      * @param bytes the byte-stream of the init command
      * @return A byte representing the position of the chain
      */
@@ -171,5 +154,7 @@ public class Commands {
         return bytes[CHAIN_POS_OFFSET];
     }
 
-    public static byte parseMiddleboxFromGetStateCommand(byte[] bytes) { return bytes[MB_OFFSET]; }
+    public static byte parseMiddleboxFromGetStateCommand(byte[] bytes) {
+        return bytes[MB_OFFSET];
+    }
 }
